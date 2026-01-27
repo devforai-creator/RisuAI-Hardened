@@ -18,6 +18,7 @@ import { tokenize } from "../tokenizer";
 import { fetchNative, readImage } from "../globalApi.svelte";
 import { loadLoreBookV3Prompt } from './lorebook.svelte';
 import { getPersonaPrompt, getUserName, getUserIcon } from '../util';
+import { HARDENED_LOCAL_ONLY } from "../security/hardening";
 let luaFactory:LuaFactory
 let ScriptingSafeIds = new Set<string>()
 let ScriptingEditDisplayIds = new Set<string>()
@@ -71,6 +72,15 @@ export async function runScripted(code:string, arg:{
     let chat = arg.chat ?? getCurrentChat()
     let stopSending = false
     let lowLevelAccess = arg.lowLevelAccess ?? false
+
+    if (type === 'py' && HARDENED_LOCAL_ONLY) {
+        alertError('Python scripting is disabled in the hardened build.')
+        return {
+            stopSending: false,
+            chat,
+            res: data
+        }
+    }
 
     if(type === 'lua'){
         await ensureLuaFactory()

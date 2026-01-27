@@ -13,6 +13,7 @@ import { getNodetextToSentence, sleep } from "../util"
 import { processScriptFull } from "../process/scripts"
 import localforage from "localforage"
 import sendSound from '../../etc/send.mp3'
+import { HARDENED_LOCAL_ONLY } from "../security/hardening"
 
 let cache={
     origin: [''],
@@ -169,6 +170,9 @@ async function translateMain(text:string, arg:{from:string, to:string, host:stri
         return f.data.data;
     }
     if(db.translatorType == "bergamot") {
+        if (HARDENED_LOCAL_ONLY) {
+            return 'ERR::Bergamot translator is disabled in the hardened build.'
+        }
         if(!bergamotTranslate){
             const bergamotTranslator = await import('./bergamotTranslator')
             bergamotTranslate = bergamotTranslator.bergamotTranslate

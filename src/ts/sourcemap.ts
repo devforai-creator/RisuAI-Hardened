@@ -1,15 +1,21 @@
 import { SourceMapConsumer } from 'source-map';
+import { HARDENED_LOCAL_ONLY } from './security/hardening';
 
 // Initialize the source-map library with the wasm file location
-// @ts-expect-error initialize is a static method but typed as instance method
-SourceMapConsumer.initialize({
-    'lib/mappings.wasm': 'https://cdn.jsdelivr.net/npm/source-map@0.7.4/lib/mappings.wasm'
-});
+if (!HARDENED_LOCAL_ONLY) {
+    // @ts-expect-error initialize is a static method but typed as instance method
+    SourceMapConsumer.initialize({
+        'lib/mappings.wasm': 'https://cdn.jsdelivr.net/npm/source-map@0.7.4/lib/mappings.wasm'
+    });
+}
 
 // Timeout for fetch requests (10 seconds)
 const FETCH_TIMEOUT_MS = 10000;
 
 export async function translateStackTrace(stackTrace: string): Promise<string> {
+    if (HARDENED_LOCAL_ONLY) {
+        return stackTrace || '';
+    }
     if (!stackTrace) {
         return '';
     }

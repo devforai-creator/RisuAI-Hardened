@@ -1,5 +1,6 @@
 import * as pdfjs from 'pdfjs-dist'
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker?worker&url'
+import { HARDENED_LOCAL_ONLY } from 'src/ts/security/hardening'
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker
 
@@ -8,6 +9,9 @@ export async function convertPdfToImages(pdfBuffer: ArrayBuffer, options?: {
     format?: 'png' | 'jpeg'
     quality?: number
 }): Promise<string[]> {
+    if (HARDENED_LOCAL_ONLY) {
+        throw new Error('PDF processing is disabled in the hardened build.')
+    }
     const { scale = 1.5, format = 'png', quality = 0.8 } = options || {}
     
     const loadingTask = pdfjs.getDocument({
@@ -43,6 +47,9 @@ export async function convertPdfToImages(pdfBuffer: ArrayBuffer, options?: {
 }
 
 export async function extractPdfText(pdfBuffer: ArrayBuffer): Promise<string[]> {
+    if (HARDENED_LOCAL_ONLY) {
+        throw new Error('PDF processing is disabled in the hardened build.')
+    }
     const loadingTask = pdfjs.getDocument({
         data: pdfBuffer,
         cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/cmaps/',
