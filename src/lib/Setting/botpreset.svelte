@@ -7,6 +7,7 @@
     import TextInput from "../UI/GUI/TextInput.svelte";
     import { prebuiltPresets } from "src/ts/process/templates/templates";
     import { ShowRealmFrameStore } from "src/ts/stores.svelte";
+    import { HARDENED_DISABLE_HUB } from "src/ts/security/hardening";
     import PromptDiffModal from "../Others/PromptDiffModal.svelte";
 
     let editMode = $state(false)
@@ -211,6 +212,10 @@
                             downloadPreset(i, 'risupreset')
                         }
                         if(data.type === 'realm'){
+                            if (HARDENED_DISABLE_HUB) {
+                                alertError('RisuRealm is disabled in the hardened build.')
+                                return
+                            }
                             $ShowRealmFrameStore = `preset:${i}`
                         }
                     }} onkeydown={(e) => {

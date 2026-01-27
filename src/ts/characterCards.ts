@@ -18,6 +18,7 @@ import { exportModule, readModule, type RisuModule } from "./process/modules"
 import { readFile } from "@tauri-apps/plugin-fs"
 import { onOpenUrl } from '@tauri-apps/plugin-deep-link';
 import { AccountStorage } from "./storage/accountStorage"
+import { HARDENED_DISABLE_HUB } from "./security/hardening"
 
 
 const EXTERNAL_HUB_URL = 'https://sv.risuai.xyz';
@@ -27,6 +28,16 @@ export const hubURL = isNodeServer
     : (window.location.hostname === 'nightly.risuai.xyz' || localStorage.getItem('hub') === 'nightly')
     ? NIGHTLY_HUB_URL 
     : EXTERNAL_HUB_URL;
+
+const hubDisabledMessage = 'RisuHub/Realm features are disabled in the hardened build.'
+
+function hubDisabled(action = 'This action') {
+    if (!HARDENED_DISABLE_HUB) {
+        return false
+    }
+    alertError(`${action} is disabled in the hardened build.`)
+    return true
+}
 
 export async function importCharacter() {
     try {
@@ -388,6 +399,9 @@ export async function importCharacterProcess(f:{
 }
 
 export const getRealmInfo = async (realmPath:string) => {
+    if (hubDisabled('RisuRealm')) {
+        return
+    }
     const url = new URL(location.href);
     url.searchParams.delete('realm');
     window.history.pushState(null, '', url.toString());
@@ -405,7 +419,7 @@ export const showRealmInfoStore:Writable<null|hubType> = writable(null)
 export async function characterURLImport() {
     const realmPath = (new URLSearchParams(location.search)).get('realm')
     try {
-        if(realmPath){
+        if(realmPath && !HARDENED_DISABLE_HUB){
            getRealmInfo(realmPath)
         }
     } catch (error) {
@@ -414,7 +428,7 @@ export async function characterURLImport() {
 
     const charPath = (new URLSearchParams(location.search)).get('charahub')
     try {
-        if(charPath){
+        if(charPath && !HARDENED_DISABLE_HUB){
             alertWait('Loading from Chub...')
             const url = new URL(location.href);
             url.searchParams.delete('charahub');
@@ -443,7 +457,7 @@ export async function characterURLImport() {
 
 
     const hash = location.hash
-    if(hash.startsWith('#import=')){
+    if(hash.startsWith('#import=') && !HARDENED_DISABLE_HUB){
         location.hash = ''
         const url = hash.replace('#import=', '')
         try {
@@ -563,7 +577,10 @@ export async function characterURLImport() {
                 const type = splited[splited.length - 2]
                 switch(type){
                     case 'realm':{
-                        downloadRisuHub(id)
+                        if (!HARDENED_DISABLE_HUB) {
+                            downloadRisuHub(id)
+                        }
+                        break
                     }
                 }
             }
@@ -713,6 +730,9 @@ export async function exportChar(charaID:number):Promise<string> {
         exportCharacterCard(char,'png', {spec: 'v2'})
     }
     else if(option.type === 'realm'){
+        if (hubDisabled('RisuRealm share')) {
+            return ''
+        }
         ShowRealmFrameStore.set("character")
     }
     else{
@@ -1684,6 +1704,9 @@ export async function shareRisuHub2(char:character, arg:{
     anon: boolean,
     update: boolean
 }) {
+    if (hubDisabled('RisuHub share')) {
+        return
+    }
     try {
         char = safeStructuredClone(char)
         char.license = arg.license
@@ -1777,6 +1800,9 @@ export async function getRisuHub(arg:{
     nsfw:boolean
     sort:string
 }):Promise<hubType[]> {
+    if (HARDENED_DISABLE_HUB) {
+        return []
+    }
     try {
         arg.search += ' __shared'
         const stringArg = `search==${arg.search}&&page==${arg.page}&&nsfw==${arg.nsfw}&&sort==${arg.sort}&&web==${(!isNodeServer && !isTauri) ? 'web' : 'other'}`
@@ -1803,6 +1829,9 @@ export async function getRisuHub(arg:{
 export async function downloadRisuHub(id:string, arg:{
     forceRedirect?: boolean
 } = {}) {
+    if (hubDisabled('RisuHub download')) {
+        return
+    }
     try {
         if(!arg.forceRedirect){
             if(!(await alertTOS())){
@@ -1875,6 +1904,9 @@ export async function downloadRisuHub(id:string, arg:{
 }
 
 export async function getHubResources(id:string) {
+    if (HARDENED_DISABLE_HUB) {
+        throw new Error(hubDisabledMessage)
+    }
     const res = await fetch(`${hubURL}/resource/${id}`)
     if(res.status !== 200){
         throw (await res.text())

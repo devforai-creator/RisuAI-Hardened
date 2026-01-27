@@ -26,6 +26,7 @@
     import { getChatBranches } from "src/ts/gui/branches";
     import { getCurrentCharacter } from "src/ts/storage/database.svelte";
     import { translateStackTrace } from "../../ts/sourcemap";
+    import { HARDENED_DISABLE_HUB } from "src/ts/security/hardening";
 
     let showDetails = $state(false);
     let translatedStackTrace = $state('');
@@ -34,7 +35,7 @@
 
     let btn
     let input = $state('')
-    let cardExportType = $state('realm')
+    let cardExportType = $state(HARDENED_DISABLE_HUB ? '' : 'realm')
     let cardExportType2 = $state('')
     let cardLicense = $state('')
     let generationInfoMenuIndex = $state(0)
@@ -92,7 +93,7 @@
             branchHover = null
         }
         if($alertStore.type !== 'cardexport'){
-            cardExportType = 'realm'
+            cardExportType = HARDENED_DISABLE_HUB ? '' : 'realm'
             cardExportType2 = ''
             cardLicense = ''
         }
@@ -141,6 +142,7 @@
     }
 </script>
 
+{#if !HARDENED_DISABLE_HUB}
 <svelte:window onmessage={async (e) => {
     if(e.origin.startsWith("https://sv.risuai.xyz") || e.origin.startsWith("https://nightly.sv.risuai.xyz") || e.origin.startsWith("http://127.0.0.1") || e.origin === window.location.origin){
         if(e.data.msg?.data?.vaild && $alertStore.type === 'login'){
@@ -151,6 +153,7 @@
         }
     }
 }}></svelte:window>
+{/if}
 
 {#if $alertStore.type !== 'none' &&  $alertStore.type !== 'toast' &&  $alertStore.type !== 'cardexport' && $alertStore.type !== 'branches' && $alertStore.type !== 'selectModule' && $alertStore.type !== 'pukmakkurit' && $alertStore.type !== 'requestlogs'}
     <div class="absolute w-full h-full z-50 bg-black/50 flex justify-center items-center" class:vis={ $alertStore.type === 'wait2'}>
@@ -693,7 +696,11 @@
                 {:else if $alertStore.submsg === 'preset'}
                     <span class="text-textcolor2 text-sm">{language.risupresetDesc}</span>
                     {#if cardExportType2 === 'preset' && (DBState.db.botPresets[DBState.db.botPresetsId].image || DBState.db.botPresets[DBState.db.botPresetsId].regex?.length > 0)}
-                        <span class="text-red-500 text-sm">Use RisuRealm to share the preset. Preset with image or regexes cannot be exported for now.</span>
+                        {#if HARDENED_DISABLE_HUB}
+                            <span class="text-red-500 text-sm">Preset with image or regexes cannot be exported in the hardened build.</span>
+                        {:else}
+                            <span class="text-red-500 text-sm">Use RisuRealm to share the preset. Preset with image or regexes cannot be exported for now.</span>
+                        {/if}
                     {/if}
                 {:else}
                     <span class="text-textcolor2 text-sm">{language.ccv3Desc}</span>
@@ -706,19 +713,25 @@
             {:else if cardExportType === 'ccv2'}
                 <span class="text-textcolor2 text-sm">{language.ccv2Desc}</span>
                 <span class="text-red-500 text-sm">{language.v2Warning}</span>
-            {:else}
+            {:else if cardExportType === 'realm'}
                 <span class="text-textcolor2 text-sm">{language.realmDesc}</span>
             {/if}
             <div class="flex items-center flex-wrap mt-2">
                 {#if $alertStore.submsg === 'preset'}
-                    <button class="bg-bgcolor px-2 py-4 rounded-lg flex-1" class:ring-1={cardExportType === 'realm'} onclick={() => {cardExportType = 'realm'}}>RisuRealm</button>
-                    <button class="bg-bgcolor px-2 py-4 rounded-lg ml-2 flex-1" class:ring-1={cardExportType === ''} onclick={() => {cardExportType = ''}}>Risupreset</button>
+                    {#if !HARDENED_DISABLE_HUB}
+                        <button class="bg-bgcolor px-2 py-4 rounded-lg flex-1" class:ring-1={cardExportType === 'realm'} onclick={() => {cardExportType = 'realm'}}>RisuRealm</button>
+                    {/if}
+                    <button class="bg-bgcolor px-2 py-4 rounded-lg flex-1" class:ml-2={!HARDENED_DISABLE_HUB} class:ring-1={cardExportType === ''} onclick={() => {cardExportType = ''}}>Risupreset</button>
                 {:else if $alertStore.submsg === 'module'}
-                    <button class="bg-bgcolor px-2 py-4 rounded-lg ml-2 flex-1" class:ring-1={cardExportType === 'realm'} onclick={() => {cardExportType = 'realm'}}>RisuRealm</button>
+                    {#if !HARDENED_DISABLE_HUB}
+                        <button class="bg-bgcolor px-2 py-4 rounded-lg ml-2 flex-1" class:ring-1={cardExportType === 'realm'} onclick={() => {cardExportType = 'realm'}}>RisuRealm</button>
+                    {/if}
                     <button class="bg-bgcolor px-2 py-4 rounded-lg flex-1" class:ring-1={cardExportType === ''} onclick={() => {cardExportType = ''}}>RisuM</button>
                 {:else}
-                    <button class="bg-bgcolor px-2 py-4 rounded-lg flex-1" class:ring-1={cardExportType === 'realm'} onclick={() => {cardExportType = 'realm'}}>RisuRealm</button>
-                    <button class="bg-bgcolor px-2 py-4 rounded-lg ml-2 flex-1" class:ring-1={cardExportType === ''} onclick={() => {
+                    {#if !HARDENED_DISABLE_HUB}
+                        <button class="bg-bgcolor px-2 py-4 rounded-lg flex-1" class:ring-1={cardExportType === 'realm'} onclick={() => {cardExportType = 'realm'}}>RisuRealm</button>
+                    {/if}
+                    <button class="bg-bgcolor px-2 py-4 rounded-lg flex-1" class:ml-2={!HARDENED_DISABLE_HUB} class:ring-1={cardExportType === ''} onclick={() => {
                         cardExportType = ''
                         cardExportType2 = 'charxJpeg'
                     }}>Character Card V3</button>

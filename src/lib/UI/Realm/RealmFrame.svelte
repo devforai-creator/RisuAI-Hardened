@@ -6,6 +6,7 @@
     import { selectedCharID, ShowRealmFrameStore } from "src/ts/stores.svelte";
     import { asBuffer, sleep } from "src/ts/util";
     import { onDestroy, onMount } from "svelte";
+    import { HARDENED_DISABLE_HUB } from "src/ts/security/hardening";
 
     const close =  () => {
         $ShowRealmFrameStore = ''
@@ -51,6 +52,11 @@
     }
 
     onMount(async () => {
+        if (HARDENED_DISABLE_HUB) {
+            alertMd("RisuRealm is disabled in the hardened build.")
+            close()
+            return
+        }
         window.addEventListener('message', pmfunc)
 
         let data:{

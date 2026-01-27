@@ -14,11 +14,13 @@
     import Button from "src/lib/UI/GUI/Button.svelte";
     import { exportAsDataset } from "src/ts/storage/exportAsDataset";
     import { loginToSionyw, testSionywLogin } from "src/ts/sionyw";
+    import { HARDENED_DISABLE_DRIVE, HARDENED_DISABLE_HUB } from "src/ts/security/hardening";
     let openIframe = $state(false)
     let openIframeURL = $state('')
     let popup:Window = null
 </script>
 
+{#if !HARDENED_DISABLE_HUB}
 <svelte:window onmessage={async (e) => {
     if(e.origin.startsWith("https://sv.risuai.xyz") || e.origin.startsWith("http://127.0.0.1") || e.origin === window.location.origin){
         if(e.data.msg?.type === 'drive'){
@@ -39,6 +41,7 @@
         }
     }
 }}></svelte:window>
+{/if}
 
 
 <h2 class="mb-2 text-2xl font-bold mt-2">{language.account} & {language.files}</h2>
@@ -80,63 +83,79 @@
         {language.loadInternalBackup}
     </Button>
 {:else}
-    <Button
-        onclick={async () => {
-            loadRisuAccountBackup()
-        }} className="mt-2">
-        {language.loadAutoServerBackup}
-    </Button>
+    {#if HARDENED_DISABLE_HUB}
+        <span class="text-textcolor2 text-sm mt-2">Risu account sync is disabled in the hardened build.</span>
+    {:else}
+        <Button
+            onclick={async () => {
+                loadRisuAccountBackup()
+            }} className="mt-2">
+            {language.loadAutoServerBackup}
+        </Button>
+    {/if}
 {/if}
 
-<Button
-    onclick={async () => {
-        if(await alertConfirm(language.backupConfirm)){
-            localStorage.setItem('backup', 'save')
-            
-            if(isTauri || isNodeServer){
-                checkDriver('savetauri')
+{#if HARDENED_DISABLE_DRIVE}
+    <span class="text-textcolor2 text-sm mt-2">Cloud backup is disabled in the hardened build.</span>
+{:else}
+    <Button
+        onclick={async () => {
+            if(await alertConfirm(language.backupConfirm)){
+                localStorage.setItem('backup', 'save')
+                
+                if(isTauri || isNodeServer){
+                    checkDriver('savetauri')
+                }
+                else{
+                    checkDriver('save')
+                }
             }
-            else{
-                checkDriver('save')
-            }
-        }
-    }} className="mt-2">
-    {language.savebackup}
-</Button>
+        }} className="mt-2">
+        {language.savebackup}
+    </Button>
 
-<Button
-    onclick={async () => {
-        if((await alertConfirm(language.backupLoadConfirm)) && (await alertConfirm(language.backupLoadConfirm2))){
-            localStorage.setItem('backup', 'load')
-            if(isTauri || isNodeServer){
-                checkDriver('loadtauri')
+    <Button
+        onclick={async () => {
+            if((await alertConfirm(language.backupLoadConfirm)) && (await alertConfirm(language.backupLoadConfirm2))){
+                localStorage.setItem('backup', 'load')
+                if(isTauri || isNodeServer){
+                    checkDriver('loadtauri')
+                }
+                else{
+                    checkDriver('load')
+                }
             }
-            else{
-                checkDriver('load')
-            }
-        }
-    }}
-    className="mt-2">
-    {language.loadbackup}
-</Button>
+        }}
+        className="mt-2">
+        {language.loadbackup}
+    </Button>
+{/if}
 
 <Button onclick={exportAsDataset} className="mt-2">
     {language.exportAsDataset}
 </Button>
-<div class="bg-darkbg p-3 rounded-md mb-2 flex flex-col items-start mt-2">
-    <div class="w-full">
-        <h1 class="text-3xl font-black min-w-0">Risu Account{#if DBState.db.account}
-            <button class="bg-selected p-1 text-sm font-light rounded-md hover:bg-blue-500 transition-colors float-right" onclick={async () => {
-                if(DBState.db.account.useSync || forageStorage.isAccount){
-                    unMigrationAccount()
-                }
-                
-                DBState.db.account = undefined
-            }}>{language.logout}</button>
-                {#if import.meta.env.DEV}
+{#if HARDENED_DISABLE_HUB}
+    <div class="bg-darkbg p-3 rounded-md mb-2 flex flex-col items-start mt-2">
+        <div class="w-full">
+            <h1 class="text-3xl font-black min-w-0">Risu Account</h1>
+        </div>
+        <span class="text-textcolor2 text-sm">Risu account sync is disabled in the hardened build.</span>
+    </div>
+{:else}
+    <div class="bg-darkbg p-3 rounded-md mb-2 flex flex-col items-start mt-2">
+        <div class="w-full">
+            <h1 class="text-3xl font-black min-w-0">Risu Account{#if DBState.db.account}
                 <button class="bg-selected p-1 text-sm font-light rounded-md hover:bg-blue-500 transition-colors float-right" onclick={async () => {
-                    loginToSionyw()
-                }}>{language.loginSionyw}</button>
+                    if(DBState.db.account.useSync || forageStorage.isAccount){
+                        unMigrationAccount()
+                    }
+                    
+                    DBState.db.account = undefined
+                }}>{language.logout}</button>
+                    {#if import.meta.env.DEV}
+                    <button class="bg-selected p-1 text-sm font-light rounded-md hover:bg-blue-500 transition-colors float-right" onclick={async () => {
+                        loginToSionyw()
+                    }}>{language.loginSionyw}</button>
 
                 <button class="bg-selected p-1 text-sm font-light rounded-md hover:bg-blue-500 transition-colors float-right" onclick={async () => {
                     testSionywLogin()
@@ -175,7 +194,8 @@
     {/if}
     <!-- <Button onclick={autoServerBackup}>Auto Server Backups</Button> -->
 
-</div>
+    </div>
+{/if}
 {#if openIframe}
     <div class="fixed top-0 left-0 bg-black/50 w-full h-full flex justify-center items-center">
         <iframe src={openIframeURL} title="login" class="w-full h-full">

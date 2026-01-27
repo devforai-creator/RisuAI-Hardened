@@ -29,12 +29,20 @@
     import HypaV3Progress from './lib/Others/HypaV3Progress.svelte';
     import PluginAlertModal from './lib/Others/PluginAlertModal.svelte';
     import PopupList from './lib/UI/PopupList.svelte';
+    import { HARDENED_DISABLE_HUB } from "./ts/security/hardening";
 
   
     let didFirstSetup: boolean  = $derived(DBState.db?.didFirstSetup)
     let gridOpen = $state(false)
     let aprilFools = $state(new Date().getMonth() === 3 && new Date().getDate() === 1)
     let aprilFoolsPage = $state(0)
+
+    $: if (HARDENED_DISABLE_HUB && $ShowRealmFrameStore) {
+        $ShowRealmFrameStore = ''
+    }
+    $: if (HARDENED_DISABLE_HUB && $showRealmInfoStore) {
+        showRealmInfoStore.set(null)
+    }
 </script>
 
 <main class="flex bg-bg w-full h-full max-w-100vw text-textcolor" ondragover={(e) => {
@@ -183,10 +191,10 @@
     {#if $alertStore.type !== 'none'}
         <AlertComp />
     {/if}
-    {#if $showRealmInfoStore}
+    {#if !HARDENED_DISABLE_HUB && $showRealmInfoStore}
         <RealmPopUp bind:openedData={$showRealmInfoStore} />
     {/if}
-    {#if $ShowRealmFrameStore}
+    {#if !HARDENED_DISABLE_HUB && $ShowRealmFrameStore}
         <RealmFrame />
     {/if}
     {#if $openPresetList}

@@ -3,10 +3,14 @@
     import { alertConfirm } from "src/ts/alert";
     import { checkDriver } from "src/ts/drive/drive";
     import { isTauri, isNodeServer } from "src/ts/platform"
+    import { HARDENED_DISABLE_DRIVE } from "src/ts/security/hardening";
 
 </script>
 
 <h2 class="mb-2 text-2xl font-bold mt-2">{language.files}</h2>
+{#if HARDENED_DISABLE_DRIVE}
+    <span class="text-textcolor2 text-sm">Cloud backup is disabled in the hardened build.</span>
+{:else}
 <button
     onclick={async () => {
         if(await alertConfirm(language.backupConfirm)){
@@ -38,6 +42,7 @@
     class="drop-shadow-lg p-3 border-darkborderc border-solid mt-2 flex justify-center items-center ml-2 mr-2 border-1 hover:bg-selected text-sm">
     {language.loadbackup}
 </button>
+{/if}
 
 
 <!-- <button

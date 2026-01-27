@@ -6,6 +6,7 @@
     import RisuHubIcon from "./RealmHubIcon.svelte";
     import { MobileGUI, RealmInitialOpenChar } from "src/ts/stores.svelte";
     import RealmPopUp from "./RealmPopUp.svelte";
+    import { HARDENED_DISABLE_HUB } from "src/ts/security/hardening";
 
     let openedData:null|hubType = $state(null)
 
@@ -37,7 +38,9 @@
         return getHub()
     }
 
-    getHub()
+    if (!HARDENED_DISABLE_HUB) {
+        getHub()
+    }
 
 
 
@@ -48,6 +51,9 @@
         }
     })
 </script>
+{#if HARDENED_DISABLE_HUB}
+    <div class="text-textcolor2 p-4">RisuHub/Realm is disabled in the hardened build.</div>
+{:else}
 <div class="w-full flex justify-center mt-4 mb-2">
     <div class="flex items-stretch w-2xl max-w-full">
         <input bind:value={search} class="peer focus:border-textcolor transition-colors outline-hidden text-textcolor p-2 min-w-0 border border-r-0 bg-transparent rounded-md rounded-r-none input-text text-xl grow ml-4 border-darkborderc resize-none overflow-y-hidden overflow-x-hidden max-w-full">
@@ -172,7 +178,6 @@
         </div>
     </div>
 {/if}
-
 {#if openedData}
     <RealmPopUp bind:openedData={openedData} />
 {/if}
@@ -211,4 +216,5 @@
             })}>Import Character from URL or ID</button>
         </div>
     </div>
+{/if}
 {/if}

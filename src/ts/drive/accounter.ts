@@ -5,8 +5,13 @@ import { AppendableBuffer } from "../globalApi.svelte"
 import { decodeRisuSave } from "../storage/risuSave"
 import { language } from "src/lang"
 import { fetchProtectedResource } from "../sionyw"
+import { HARDENED_DISABLE_HUB } from "../security/hardening"
 
 export function risuLogin() {
+    if (HARDENED_DISABLE_HUB) {
+        alertError("Risu account is disabled in the hardened build.");
+        return
+    }
     const win = window.open(hubURL + '/hub/login')
     window.addEventListener("message", (ev) => {
         if(ev.source !== win.window){
@@ -20,6 +25,10 @@ export function risuLogin() {
 }
 
 export async function saveRisuAccountData() {
+    if (HARDENED_DISABLE_HUB) {
+        alertError("Risu account is disabled in the hardened build.");
+        return
+    }
     const db = getDatabase()
     if(!db.account){
         alertError("Not logged in error")
@@ -39,6 +48,10 @@ export async function saveRisuAccountData() {
 }
 
 export async function loadRisuAccountData() {
+    if (HARDENED_DISABLE_HUB) {
+        alertError("Risu account is disabled in the hardened build.");
+        return
+    }
     const db = getDatabase()
     if(!db.account){
         alertError("Not logged in error")
@@ -55,6 +68,10 @@ export async function loadRisuAccountData() {
 }
 
 export async function loadRisuAccountBackup() {
+    if (HARDENED_DISABLE_HUB) {
+        alertError("Risu account is disabled in the hardened build.");
+        return
+    }
     const db = getDatabase()
     if(!db.account){
         alertError("Not logged in error")

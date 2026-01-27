@@ -7,9 +7,14 @@ import { language } from "../../lang";
 import { relaunch } from '@tauri-apps/plugin-process';
 import { sleep } from "../util";
 import { hubURL } from "../characterCards";
+import { HARDENED_DISABLE_DRIVE } from "../security/hardening";
 import { decodeRisuSave, encodeRisuSaveLegacy } from "../storage/risuSave";
 
 export async function checkDriver(type:'save'|'load'|'loadtauri'|'savetauri'|'reftoken'){
+    if (HARDENED_DISABLE_DRIVE) {
+        alertError('Cloud backup is disabled in the hardened build.');
+        return
+    }
     const CLIENT_ID = '580075990041-l26k2d3c0nemmqiu3d3aag01npfrkn76.apps.googleusercontent.com';
     const REDIRECT_URI = type === 'reftoken' ? 'https://sv.risuai.xyz/drive' : "https://risuai.xyz/"
     const SCOPE = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata';
@@ -53,6 +58,9 @@ export async function checkDriver(type:'save'|'load'|'loadtauri'|'savetauri'|'re
 
 
 export async function checkDriverInit() {
+    if (HARDENED_DISABLE_DRIVE) {
+        return false
+    }
     try {
         const loc = new URLSearchParams(location.search)
         const code = loc.get('code')
@@ -109,12 +117,18 @@ let BackupDb:Database = null
 
 
 export function syncDrive() {
+    if (HARDENED_DISABLE_DRIVE) {
+        return
+    }
     BackupDb = safeStructuredClone(getDatabase())
     return
 }
 
 
 async function backupDrive(ACCESS_TOKEN:string) {
+    if (HARDENED_DISABLE_DRIVE) {
+        throw new Error('Cloud backup is disabled in the hardened build.')
+    }
     alertStore.set({
         type: "wait",
         msg: "Uploading Backup..."
@@ -184,6 +198,9 @@ type DriveFile = {
 }
 
 async function loadDrive(ACCESS_TOKEN:string, mode: 'backup'|'sync'):Promise<void|"noSync"> {
+    if (HARDENED_DISABLE_DRIVE) {
+        throw new Error('Cloud backup is disabled in the hardened build.')
+    }
     if(mode === 'backup'){
         alertStore.set({
             type: "wait",

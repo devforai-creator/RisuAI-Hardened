@@ -1,20 +1,27 @@
 import { exportCharacterCard } from "./characterCards";
 import { VirtualWriter } from "./globalApi.svelte";
 import { getCurrentCharacter, getDatabase, type character } from "./storage/database.svelte";
-import { alertStore } from "./alert";
+import { alertError, alertStore } from "./alert";
 import { asBuffer } from "./util";
+import { HARDENED_DISABLE_HUB } from "./security/hardening";
 
 let pong = false;
 
-window.addEventListener("message", (event) => {
-    if (event.origin === "https://realm.risuai.net") {
-        if (event.data === "pong") {
-            pong = true;
+if (!HARDENED_DISABLE_HUB) {
+    window.addEventListener("message", (event) => {
+        if (event.origin === "https://realm.risuai.net") {
+            if (event.data === "pong") {
+                pong = true;
+            }
         }
-    }
-});
+    });
+}
 
 export async function shareRealmCardData():Promise<{ name: ArrayBuffer; data: ArrayBuffer; }> {
+    if (HARDENED_DISABLE_HUB) {
+        alertError("RisuRealm is disabled in the hardened build.");
+        throw new Error("RisuRealm disabled");
+    }
     const char = safeStructuredClone(getCurrentCharacter({snapshot:true})) as character
     const trimedName = char.name.replace(/[^a-zA-Z0-9]/g, '') || 'character';
     const writer = new VirtualWriter()
@@ -31,6 +38,10 @@ export async function shareRealmCardData():Promise<{ name: ArrayBuffer; data: Ar
 }
 
 export function openRealm(name:string,data:ArrayBuffer) {
+    if (HARDENED_DISABLE_HUB) {
+        alertError("RisuRealm is disabled in the hardened build.");
+        return;
+    }
     const tk = getDatabase()?.account?.token;
     const id = getDatabase()?.account?.id
     const trimedName = name.replace(/[^a-zA-Z0-9]/g, '') || 'character';

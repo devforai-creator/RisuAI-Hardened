@@ -34,7 +34,7 @@ import type { AccountStorage } from "./storage/accountStorage";
 import { makeColdData } from "./process/coldstorage.svelte";
 import { installFetchGuard } from "./security/networkGuard";
 import { policyFromDatabase } from "./security/networkPolicy";
-import { HARDENED_DISABLE_PLUGINS } from "./security/hardening";
+import { HARDENED_DISABLE_HUB, HARDENED_DISABLE_PLUGINS } from "./security/hardening";
 import {
     forageStorage,
     saveDb,
@@ -208,7 +208,7 @@ export async function loadData() {
                     await loadPlugins()
                 }
             } catch (error) { }
-            if (getDatabase().account) {
+            if (getDatabase().account && !HARDENED_DISABLE_HUB) {
                 LoadingStatusState.text = "Checking Account Data..."
                 try {
                     await loadRisuAccountData()

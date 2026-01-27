@@ -33,6 +33,7 @@
     import { exportRegex, importRegex } from "src/ts/process/scripts";
     import SliderInput from "../UI/GUI/SliderInput.svelte";
     import Toggles from "./Toggles.svelte";
+    import { HARDENED_DISABLE_HUB } from "src/ts/security/hardening";
 
     let iconRemoveMode = $state(false)
     let viewSubMenu = $state(0)
@@ -715,20 +716,24 @@
     {/if}
 {:else if $CharConfigSubMenu === 6}
 
-    {#if DBState.db.characters[$selectedCharID].license !== 'CC BY-NC-SA 4.0'
-    && DBState.db.characters[$selectedCharID].license !== 'CC BY-SA 4.0'
-    }
-        <Button size="lg" onclick={async () => {
-            if(await alertTOS()){
-                $ShowRealmFrameStore = 'character'
-            }
-        }} className="mt-2">
-            {#if DBState.db.characters[$selectedCharID].realmId}
-                {language.updateRealm}
-            {:else}
-                {language.shareCloud}
-            {/if}
-        </Button>
+    {#if HARDENED_DISABLE_HUB}
+        <span class="text-textcolor2 mt-2">RisuRealm is disabled in the hardened build.</span>
+    {:else}
+        {#if DBState.db.characters[$selectedCharID].license !== 'CC BY-NC-SA 4.0'
+        && DBState.db.characters[$selectedCharID].license !== 'CC BY-SA 4.0'
+        }
+            <Button size="lg" onclick={async () => {
+                if(await alertTOS()){
+                    $ShowRealmFrameStore = 'character'
+                }
+            }} className="mt-2">
+                {#if DBState.db.characters[$selectedCharID].realmId}
+                    {language.updateRealm}
+                {:else}
+                    {language.shareCloud}
+                {/if}
+            </Button>
+        {/if}
     {/if}
 
     {#if DBState.db.characters[$selectedCharID].license !== 'CC BY-NC-SA 4.0'

@@ -1,6 +1,7 @@
 
 import type { SettingItem } from './types';
 import { isNodeServer, isTauri } from '../platform';
+import { HARDENED_DISABLE_HUB, HARDENED_DISABLE_PLUGINS } from '../security/hardening';
 
 export const advancedSettingsItems: SettingItem[] = [
     { type: 'header', id: 'adv.header', labelKey: 'advancedSettings', options: { level: 'h2' }, classes: '!mb-0' },
@@ -149,7 +150,7 @@ export const advancedSettingsItems: SettingItem[] = [
     // Dynamic Assets & Others
     { id: 'adv.dynAssets', type: 'check', labelKey: 'dynamicAssets', bindKey: 'dynamicAssets', helpKey: 'dynamicAssets', classes: 'mt-4' },
     { id: 'adv.checkCorr', type: 'check', labelKey: 'checkCorruption', bindKey: 'checkCorruption', classes: 'mt-4' },
-    { id: 'adv.realmOpen', type: 'check', labelKey: 'realmDirectOpen', bindKey: 'realmDirectOpen', helpKey: 'realmDirectOpen', classes: 'mt-4' },
+    { id: 'adv.realmOpen', type: 'check', labelKey: 'realmDirectOpen', bindKey: 'realmDirectOpen', helpKey: 'realmDirectOpen', classes: 'mt-4', condition: () => !HARDENED_DISABLE_HUB },
     { id: 'adv.cssErr', type: 'check', labelKey: 'returnCSSError', bindKey: 'returnCSSError', classes: 'mt-4' },
     { id: 'adv.antiOverload', type: 'check', labelKey: 'antiServerOverload', bindKey: 'antiServerOverloads', classes: 'mt-4' },
     { id: 'adv.claudeCache', type: 'check', labelKey: 'claude1HourCaching', bindKey: 'claude1HourCaching', classes: 'mt-4' },
@@ -159,7 +160,7 @@ export const advancedSettingsItems: SettingItem[] = [
     { id: 'adv.bookmark', type: 'check', labelKey: 'bookmark', bindKey: 'enableBookmark', classes: 'mt-4' },
     { id: 'adv.simpleTool', type: 'check', labelKey: 'simplifiedToolUse', bindKey: 'simplifiedToolUse', classes: 'mt-4' },
     { id: 'adv.tokCache', type: 'check', labelKey: 'useTokenizerCaching', bindKey: 'useTokenizerCaching', classes: 'mt-4' },
-    { id: 'adv.devMode', type: 'check', labelKey: 'pluginDevelopMode', bindKey: 'pluginDevelopMode', classes: 'mt-4' },
+    { id: 'adv.devMode', type: 'check', labelKey: 'pluginDevelopMode', bindKey: 'pluginDevelopMode', classes: 'mt-4', condition: () => !HARDENED_DISABLE_PLUGINS },
 
     // More Experimental (Condition: useExperimental)
     {
@@ -174,7 +175,7 @@ export const advancedSettingsItems: SettingItem[] = [
     // Sync (Condition: db.account.useSync)
     {
         id: 'adv.sync.realm', type: 'check', fallbackLabel: 'Lightning Realm Import', bindKey: 'lightningRealmImport',
-        condition: (ctx) => !!ctx.db.account?.useSync, showExperimental: true, classes: 'mt-4'
+        condition: (ctx) => !HARDENED_DISABLE_HUB && !!ctx.db.account?.useSync, showExperimental: true, classes: 'mt-4'
     },
 
     // Dynamic Assets Edit (Condition: dynamicAssets)

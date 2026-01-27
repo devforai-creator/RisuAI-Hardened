@@ -8,6 +8,11 @@
     import { getRisuHub, hubAdditionalHTML } from "src/ts/characterCards";
     import RisuHubIcon from "./Realm/RealmHubIcon.svelte";
     import Title from "./Title.svelte";
+    import { HARDENED_DISABLE_HUB } from "src/ts/security/hardening";
+
+    $: if (HARDENED_DISABLE_HUB && $OpenRealmStore) {
+        $OpenRealmStore = false
+    }
 </script>
 <div class="h-full w-full flex flex-col overflow-y-auto items-center">
     {#if !$OpenRealmStore}
@@ -15,7 +20,9 @@
       <h3 class="text-textcolor2 mt-1">Version {getVersionString()}</h3>
     {/if}
     <div class="w-full flex p-4 flex-col text-textcolor max-w-4xl">
-      {#if !$OpenRealmStore}
+      {#if HARDENED_DISABLE_HUB}
+        <div class="text-textcolor2 mt-4">RisuHub/Realm is disabled in the hardened build.</div>
+      {:else if !$OpenRealmStore}
       <div class="mt-4 mb-4 w-full border-t border-t-selected"></div>
       <h1 class="text-2xl font-bold">Recently Uploaded<button class="text-base font-medium float-right p-1 bg-darkbg rounded-md hover:ring-3" onclick={() => {
         $OpenRealmStore = true
