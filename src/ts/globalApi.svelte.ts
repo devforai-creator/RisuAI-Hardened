@@ -39,6 +39,7 @@ import { initMobileGesture } from "./hotkey";
 import { fetch as TauriHTTPFetch } from '@tauri-apps/plugin-http';
 import { moduleUpdate } from "./process/modules";
 import { checkNetworkUrl, policyFromDatabase } from "./security/networkPolicy";
+import { HARDENED_LOCAL_ONLY } from "./security/hardening";
 import type { AccountStorage } from "./storage/accountStorage";
 import { makeColdData } from "./process/coldstorage.svelte";
 import { isTauri, isNodeServer } from "./platform";
@@ -590,6 +591,9 @@ export function addFetchLog(arg: {
     chatId?: string,
     status?: number
 }): number {
+    if (HARDENED_LOCAL_ONLY) {
+        return -1;
+    }
     fetchLog.unshift({
         body: typeof (arg.body) === 'string' ? arg.body : JSON.stringify(arg.body, null, 2),
         header: JSON.stringify(arg.headers ?? {}, null, 2),
@@ -658,6 +662,9 @@ export async function globalFetch(url: string, arg: GlobalFetchArgs = {}): Promi
  * @param {GlobalFetchArgs} arg - The arguments for the fetch request.
  */
 function addFetchLogInGlobalFetch(response: any, success: boolean, url: string, arg: GlobalFetchArgs, status?: number) {
+    if (HARDENED_LOCAL_ONLY) {
+        return;
+    }
     try {
         fetchLog.unshift({
             body: JSON.stringify(arg.body, null, 2),
@@ -1390,12 +1397,17 @@ export class AppendableBuffer {
  * @returns {ReadableStream<Uint8Array>} - The new readable stream.
  */
 const pipeFetchLog = (fetchLogIndex: number, readableStream: ReadableStream<Uint8Array>) => {
+    if (fetchLogIndex < 0 || !fetchLog[fetchLogIndex]) {
+        return readableStream;
+    }
     
     const splited = readableStream.tee();
     
     (async () => {
         const text = await (new Response(splited[0])).text()
-        fetchLog[fetchLogIndex].response = text
+        if (fetchLog[fetchLogIndex]) {
+            fetchLog[fetchLogIndex].response = text
+        }
     })()
     
     return splited[1]
