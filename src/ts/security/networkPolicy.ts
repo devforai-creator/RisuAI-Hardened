@@ -95,7 +95,7 @@ export function checkNetworkUrl(input: string | URL, policy: NetworkPolicy): Net
     }
 
     const protocol = url.protocol.toLowerCase();
-    if (protocol === 'data:' || protocol === 'blob:' || protocol === 'file:' || protocol === 'asset:' || protocol === 'tauri:') {
+    if (protocol === 'data:' || protocol === 'blob:' || protocol === 'file:' || protocol === 'asset:' || protocol === 'tauri:' || protocol === 'ipc:') {
         return allowDecision(url);
     }
 

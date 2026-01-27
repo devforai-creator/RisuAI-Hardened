@@ -34,7 +34,7 @@ RisuAI-Hardened/
 ├── public/                 # Static assets
 ├── dist/                   # Build output
 ├── resources/              # Application resources
-├── docs/                   # Project documentation (see hardening roadmap)
+├── docs/                   # Project documentation (see hardening roadmap/disabled features)
 └── .github/workflows/      # CI/CD pipelines
 ```
 
