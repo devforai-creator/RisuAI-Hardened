@@ -59,9 +59,7 @@ DOMPurify.addHook("uponSanitizeElement", (node: HTMLElement, data) => {
         if (HARDENED_LOCAL_ONLY) {
             const src = node.getAttribute("src") || "";
             if (src) {
-                const policy = policyFromDatabase(DBState.db);
-                const decision = checkNetworkUrl(src, policy);
-                console.log("[DOMPurify IMG]", { src, allowed: decision.allowed, reason: decision.reason });
+                const decision = checkNetworkUrl(src, policyFromDatabase(DBState.db));
                 if (!decision.allowed) {
                     node.setAttribute("src", "/none.webp");
                     node.setAttribute("alt", "?");
