@@ -1,6 +1,6 @@
 # RisuAI-Hardened Roadmap (Local-Only)
 
-Last updated: 2026-01-26
+Last updated: 2026-01-27
 
 ## Goal
 Build a Tauri-only, local-first fork where **no data leaves the machine** except explicit LLM API calls that the user configures. Remove high-risk features (plugins, MCP, cloud sync, proxies, remote assets, updates) and harden Tauri permissions to a strict allowlist.
@@ -18,8 +18,8 @@ Build a Tauri-only, local-first fork where **no data leaves the machine** except
 
 ## Decision Points
 1) **Local LLM (loopback) policy**
-   - Option A (safe + flexible): allow only loopback hosts (`localhost`, `127.0.0.1`, `::1`) behind an explicit allowlist toggle.
-   - Option B (strict): disable all local LLM endpoints by default and require manual re-enable.
+   - **Decision:** default **block** loopback (`localhost`, `127.0.0.1`, `::1`).
+   - Future option: explicit allowlist/opt-in toggle for loopback endpoints.
 
 2) **Updater**
    - Option A: remove updater plugin and any update endpoints.
@@ -78,4 +78,3 @@ Build a Tauri-only, local-first fork where **no data leaves the machine** except
 - No plugin/MCP execution paths.
 - No web/server build path in CI or local scripts.
 - Tauri permissions are minimal and explicit.
-

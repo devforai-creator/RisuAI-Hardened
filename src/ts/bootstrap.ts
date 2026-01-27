@@ -32,6 +32,8 @@ import { initMobileGesture } from "./hotkey";
 import { moduleUpdate } from "./process/modules";
 import type { AccountStorage } from "./storage/accountStorage";
 import { makeColdData } from "./process/coldstorage.svelte";
+import { installFetchGuard } from "./security/networkGuard";
+import { policyFromDatabase } from "./security/networkPolicy";
 import {
     forageStorage,
     saveDb,
@@ -75,6 +77,7 @@ export async function loadData() {
                     LoadingStatusState.text = "Decoding Save File..."
                     const decoded = await decodeRisuSave(readed)
                     setDatabase(decoded)
+                    installFetchGuard(() => policyFromDatabase(getDatabase()))
                 } catch (error) {
                     LoadingStatusState.text = "Reading Backup Files..."
                     const backups = await getDbBackups()
@@ -87,6 +90,7 @@ export async function loadData() {
                                 setDatabase(
                                     await decodeRisuSave(backupData)
                                 )
+                                installFetchGuard(() => policyFromDatabase(getDatabase()))
                                 backupLoaded = true
                             } catch (error) {
                                 console.error(error)
@@ -116,6 +120,7 @@ export async function loadData() {
                     const decoded = await decodeRisuSave(gotStorage)
                     console.log(decoded)
                     setDatabase(decoded)
+                    installFetchGuard(() => policyFromDatabase(getDatabase()))
                 } catch (error) {
                     console.error(error)
                     const backups = await getDbBackups()
@@ -127,6 +132,7 @@ export async function loadData() {
                             setDatabase(
                                 await decodeRisuSave(backupData)
                             )
+                            installFetchGuard(() => policyFromDatabase(getDatabase()))
                             backupLoaded = true
                         } catch (error) { }
                     }
@@ -148,6 +154,7 @@ export async function loadData() {
                         setDatabase(
                             await decodeRisuSave(gotStorage)
                         )
+                        installFetchGuard(() => policyFromDatabase(getDatabase()))
                     } catch (error) {
                         const backups = await getDbBackups()
                         let backupLoaded = false
@@ -158,6 +165,7 @@ export async function loadData() {
                                 setDatabase(
                                     await decodeRisuSave(backupData)
                                 )
+                                installFetchGuard(() => policyFromDatabase(getDatabase()))
                                 backupLoaded = true
                             } catch (error) { }
                         }

@@ -38,6 +38,7 @@ import { updateLorebooks } from "./characters";
 import { initMobileGesture } from "./hotkey";
 import { fetch as TauriHTTPFetch } from '@tauri-apps/plugin-http';
 import { moduleUpdate } from "./process/modules";
+import { checkNetworkUrl, policyFromDatabase } from "./security/networkPolicy";
 import type { AccountStorage } from "./storage/accountStorage";
 import { makeColdData } from "./process/coldstorage.svelte";
 import { isTauri, isNodeServer } from "./platform";
@@ -617,7 +618,13 @@ export async function globalFetch(url: string, arg: GlobalFetchArgs = {}): Promi
 
         if (arg.abortSignal?.aborted) { return { ok: false, data: 'aborted', headers: {}, status: 400 }; }
 
-        const urlHost = new URL(url).hostname
+        const policyDecision = checkNetworkUrl(url, policyFromDatabase(db));
+        if (!policyDecision.allowed) {
+            addFetchLogInGlobalFetch(policyDecision.reason, false, url, arg, 451);
+            return { ok: false, data: policyDecision.reason, headers: {}, status: 451 };
+        }
+
+        const urlHost = policyDecision.host ?? new URL(url).hostname
         const forcePlainFetch = ((knownHostes.includes(urlHost) && !isTauri) || db.usePlainFetch || arg.plainFetchForce) && !arg.plainFetchDeforce
 
         if (knownHostes.includes(urlHost) && !isTauri && !isNodeServer) {

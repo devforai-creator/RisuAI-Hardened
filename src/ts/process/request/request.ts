@@ -19,6 +19,7 @@ import { runTrigger } from "../triggers";
 import { requestClaude } from './anthropic';
 import { requestGoogleCloudVertex } from './google';
 import { requestOpenAI, requestOpenAILegacyInstruct, requestOpenAIResponseAPI } from "./openAI";
+import { checkNetworkUrl, policyFromDatabase } from "../../security/networkPolicy";
 
 export type ToolCall = {
     name: string;
@@ -814,6 +815,13 @@ async function requestOobaLegacy(arg:RequestDataArgumentExtended):Promise<reques
     }
 
     if(useStreaming){
+        const wsDecision = checkNetworkUrl(streamUrl, policyFromDatabase(getDatabase()));
+        if (!wsDecision.allowed) {
+            return ({
+                type: "fail",
+                result: wsDecision.reason
+            })
+        }
         const oobaboogaSocket = new WebSocket(streamUrl);
         const statusCode = await new Promise((resolve) => {
             oobaboogaSocket.onopen = () => resolve(0)

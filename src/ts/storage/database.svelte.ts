@@ -617,6 +617,8 @@ export function setDatabase(data:Database){
     data.newMessageButtonStyle ??= 'bottom-center'
     data.echoMessage ??= "Echo Message"
     data.echoDelay ??= 0
+    data.networkAllowlist ??= []
+    data.networkAllowLoopback ??= false
     if(!isNodeServer && !isTauri){
         //this is intended to forcely reduce the size of the database in web
         data.promptInfoInsideChat = false
@@ -824,6 +826,8 @@ export interface Database{
     useChatSticker:boolean,
     useAdditionalAssetsPreview:boolean,
     usePlainFetch:boolean
+    networkAllowlist:string[]
+    networkAllowLoopback:boolean
     hypaMemory:boolean
     hypav2:boolean
     memoryAlgorithmType:string // To enable new memory module/algorithms 
