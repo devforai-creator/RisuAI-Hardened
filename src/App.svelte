@@ -37,12 +37,14 @@
     let aprilFools = $state(new Date().getMonth() === 3 && new Date().getDate() === 1)
     let aprilFoolsPage = $state(0)
 
-    $: if (HARDENED_DISABLE_HUB && $ShowRealmFrameStore) {
-        $ShowRealmFrameStore = ''
-    }
-    $: if (HARDENED_DISABLE_HUB && $showRealmInfoStore) {
-        showRealmInfoStore.set(null)
-    }
+    $effect(() => {
+        if (HARDENED_DISABLE_HUB && $ShowRealmFrameStore) {
+            $ShowRealmFrameStore = ''
+        }
+        if (HARDENED_DISABLE_HUB && $showRealmInfoStore) {
+            showRealmInfoStore.set(null)
+        }
+    })
 </script>
 
 <main class="flex bg-bg w-full h-full max-w-100vw text-textcolor" ondragover={(e) => {

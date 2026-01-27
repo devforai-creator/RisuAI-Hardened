@@ -142,8 +142,10 @@
     }
 </script>
 
-{#if !HARDENED_DISABLE_HUB}
 <svelte:window onmessage={async (e) => {
+    if (HARDENED_DISABLE_HUB) {
+        return
+    }
     if(e.origin.startsWith("https://sv.risuai.xyz") || e.origin.startsWith("https://nightly.sv.risuai.xyz") || e.origin.startsWith("http://127.0.0.1") || e.origin === window.location.origin){
         if(e.data.msg?.data?.vaild && $alertStore.type === 'login'){
             $alertStore = {
@@ -153,7 +155,6 @@
         }
     }
 }}></svelte:window>
-{/if}
 
 {#if $alertStore.type !== 'none' &&  $alertStore.type !== 'toast' &&  $alertStore.type !== 'cardexport' && $alertStore.type !== 'branches' && $alertStore.type !== 'selectModule' && $alertStore.type !== 'pukmakkurit' && $alertStore.type !== 'requestlogs'}
     <div class="absolute w-full h-full z-50 bg-black/50 flex justify-center items-center" class:vis={ $alertStore.type === 'wait2'}>

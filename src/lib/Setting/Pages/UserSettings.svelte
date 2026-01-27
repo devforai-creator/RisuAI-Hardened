@@ -20,8 +20,10 @@
     let popup:Window = null
 </script>
 
-{#if !HARDENED_DISABLE_HUB}
 <svelte:window onmessage={async (e) => {
+    if (HARDENED_DISABLE_HUB) {
+        return
+    }
     if(e.origin.startsWith("https://sv.risuai.xyz") || e.origin.startsWith("http://127.0.0.1") || e.origin === window.location.origin){
         if(e.data.msg?.type === 'drive'){
             await loadRisuAccountData()
@@ -41,7 +43,6 @@
         }
     }
 }}></svelte:window>
-{/if}
 
 
 <h2 class="mb-2 text-2xl font-bold mt-2">{language.account} & {language.files}</h2>
