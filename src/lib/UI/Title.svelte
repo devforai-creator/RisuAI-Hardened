@@ -2,6 +2,7 @@
     
 import { DBState } from 'src/ts/stores.svelte';
     import { openURL } from "src/ts/globalApi.svelte";
+    import { HARDENED_LOCAL_ONLY } from "src/ts/security/hardening";
     
 let specialDay = $state('')
     const today = new Date()
@@ -98,9 +99,13 @@ let specialDay = $state('')
 {#if specialDay === 'anniversary'}
     <h1>
         <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <span class="text-2xl font-extralight italic text-amber-400 hover:text-amber-600 cursor-pointer transition" role="button" tabindex="-1" onclick={() => {
-            openURL('https://risuai.net')
-        }}>Happy 2nd Anniversary!</span>
+        {#if HARDENED_LOCAL_ONLY}
+            <span class="text-2xl font-extralight italic text-amber-400 transition">Happy 2nd Anniversary!</span>
+        {:else}
+            <span class="text-2xl font-extralight italic text-amber-400 hover:text-amber-600 cursor-pointer transition" role="button" tabindex="-1" onclick={() => {
+                openURL('https://risuai.net')
+            }}>Happy 2nd Anniversary!</span>
+        {/if}
     </h1>
 {/if}
 {#if clicks >= 5}

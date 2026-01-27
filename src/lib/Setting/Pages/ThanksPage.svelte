@@ -1,6 +1,7 @@
 <script lang="ts">
     import { language } from "src/lang";
     import { openURL } from "src/ts/globalApi.svelte";
+    import { HARDENED_LOCAL_ONLY } from "src/ts/security/hardening";
 
 
     interface supporters{
@@ -17,6 +18,15 @@
     }
 
     async function loadSupporters() {
+        if (HARDENED_LOCAL_ONLY) {
+            return {
+                I: [],
+                II: [],
+                III: [],
+                IV: [],
+                V: []
+            }
+        }
 
         const supp = await fetch("https://sv.risuai.xyz/patreon/list")
 
@@ -37,79 +47,85 @@
 <span class="mb-2 text-textcolor2">{language.supporterThanksDesc}</span>
 
 <!-- Patreon Button -->
-<div class="flex items-center justify-center rounded-md flex-wrap gap-2">
-    <button class="h-12 w-44" onclick={() => {
-        openURL("https://www.patreon.com/RisuAI")
-    }}>
-        <img src="https://c5.patreon.com/external/logo/become_a_patron_button.png" alt="patreon button" class="w-full h-full"/>
-    </button>
-    <button class="h-12 w-44 bg-slate-700 font-bold text-sm" onclick={() => {
-        openURL("https://sv.risuai.xyz/patreon")
-    }}>
-        ADD YOUR NAME
-    </button>
-</div>
+{#if HARDENED_LOCAL_ONLY}
+    <div class="text-textcolor2 text-sm">Supporter list and external links are disabled in the hardened build.</div>
+{:else}
+    <div class="flex items-center justify-center rounded-md flex-wrap gap-2">
+        <button class="h-12 w-44" onclick={() => {
+            openURL("https://www.patreon.com/RisuAI")
+        }}>
+            <img src="https://c5.patreon.com/external/logo/become_a_patron_button.png" alt="patreon button" class="w-full h-full"/>
+        </button>
+        <button class="h-12 w-44 bg-slate-700 font-bold text-sm" onclick={() => {
+            openURL("https://sv.risuai.xyz/patreon")
+        }}>
+            ADD YOUR NAME
+        </button>
+    </div>
+{/if}
 
 <!-- Supporters -->
 
-{#await loadSupporters()}
-    <span>Loading...</span>
+{#if !HARDENED_LOCAL_ONLY}
+    {#await loadSupporters()}
+        <span>Loading...</span>
 
-{:then supporter}
-    <h3 class="text-xl font-bold mt-4">Supporter V</h3>
-    <div class="flex w-full max-w-full flex-wrap gap-2"> 
-        {#each supporter.V as support}
-            <div class="flex flex-col items-center justify-center border-selected border rounded-sm">
-                <div class="flex justify-center items-center py-4 px-8">
-                    <span class="font-black prism-font prism-font-gold text-3xl">{support}</span>
+    {:then supporter}
+        <h3 class="text-xl font-bold mt-4">Supporter V</h3>
+        <div class="flex w-full max-w-full flex-wrap gap-2"> 
+            {#each supporter.V as support}
+                <div class="flex flex-col items-center justify-center border-selected border rounded-sm">
+                    <div class="flex justify-center items-center py-4 px-8">
+                        <span class="font-black prism-font prism-font-gold text-3xl">{support}</span>
+                    </div>
                 </div>
-            </div>
-        {/each}
-    </div>
-    <h3 class="text-xl font-bold mt-4">Supporter IV</h3>
-    <div class="flex w-full max-w-3xl flex-wrap gap-2"> 
-        {#each supporter.IV as support}
-            <div class="flex flex-col items-center justify-center border-selected border rounded-sm">
-                <div class="flex justify-center items-center py-4 px-8">
-                    <span class="font-black prism-font prism-font-silver text-2xl">{support}</span>
+            {/each}
+        </div>
+        <h3 class="text-xl font-bold mt-4">Supporter IV</h3>
+        <div class="flex w-full max-w-3xl flex-wrap gap-2"> 
+            {#each supporter.IV as support}
+                <div class="flex flex-col items-center justify-center border-selected border rounded-sm">
+                    <div class="flex justify-center items-center py-4 px-8">
+                        <span class="font-black prism-font prism-font-silver text-2xl">{support}</span>
+                    </div>
                 </div>
-            </div>
-        {/each}
-    </div>
-    <h3 class="text-xl font-bold mt-4">Supporter III</h3>
-    <div class="flex w-full max-w-3xl flex-wrap gap-2"> 
-        {#each supporter.III as support}
-            <!-- make a card -->
-            <div class="flex flex-col items-center justify-center border-selected border rounded-sm">
-                <div class="w-32 flex justify-center items-center py-3 px-6">
-                    <span class="font-black prism-font prism-font-silver text-xl">{support}</span>
+            {/each}
+        </div>
+        <h3 class="text-xl font-bold mt-4">Supporter III</h3>
+        <div class="flex w-full max-w-3xl flex-wrap gap-2"> 
+            {#each supporter.III as support}
+                <!-- make a card -->
+                <div class="flex flex-col items-center justify-center border-selected border rounded-sm">
+                    <div class="w-32 flex justify-center items-center py-3 px-6">
+                        <span class="font-black prism-font prism-font-silver text-xl">{support}</span>
+                    </div>
                 </div>
-            </div>
-        {/each}
-    </div>
-    <h3 class="text-xl font-bold mt-4">Supporter II</h3>
-    <div class="flex w-full max-w-3xl flex-wrap gap-2"> 
-        {#each supporter.II as support}
-            <!-- make a card -->
-            <div class="flex flex-col items-center justify-center border-selected border rounded-sm">
-                <div class="w-32 flex justify-center items-center p-1">
-                    <span class="font-bold prism-font prism-font-copper text-lg">{support}</span>
+            {/each}
+        </div>
+        <h3 class="text-xl font-bold mt-4">Supporter II</h3>
+        <div class="flex w-full max-w-3xl flex-wrap gap-2"> 
+            {#each supporter.II as support}
+                <!-- make a card -->
+                <div class="flex flex-col items-center justify-center border-selected border rounded-sm">
+                    <div class="w-32 flex justify-center items-center p-1">
+                        <span class="font-bold prism-font prism-font-copper text-lg">{support}</span>
+                    </div>
                 </div>
-            </div>
-        {/each}
-    </div>
-    <h3 class="text-xl font-bold mt-4">Supporter I</h3>
-    <div class="flex w-full max-w-3xl flex-wrap gap-2"> 
-        {#each supporter.I as support}
-            <!-- make a card -->
-            <div class="flex flex-col items-center justify-center border-selected border rounded-sm">
-                <div class="w-32 flex justify-center items-center p-1">
-                    <span class="font-bold prism-font prism-font-copper">{support}</span>
+            {/each}
+        </div>
+        <h3 class="text-xl font-bold mt-4">Supporter I</h3>
+        <div class="flex w-full max-w-3xl flex-wrap gap-2"> 
+            {#each supporter.I as support}
+                <!-- make a card -->
+                <div class="flex flex-col items-center justify-center border-selected border rounded-sm">
+                    <div class="w-32 flex justify-center items-center p-1">
+                        <span class="font-bold prism-font prism-font-copper">{support}</span>
+                    </div>
                 </div>
-            </div>
-        {/each}
-    </div>
-{/await}
+            {/each}
+        </div>
+    {/await}
+{/if}
 
 
 <style>

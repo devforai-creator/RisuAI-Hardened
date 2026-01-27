@@ -1053,6 +1053,11 @@ export function getFetchLogs() {
  * @param {string} url - The URL to open.
  */
 export function openURL(url: string) {
+    const policyDecision = checkNetworkUrl(url, policyFromDatabase(getDatabase()));
+    if (!policyDecision.allowed) {
+        alertError(policyDecision.reason);
+        return;
+    }
     if (isTauri) {
         open(url)
     }
@@ -1422,11 +1427,37 @@ export async function fetchNative(url: string, arg: {
 }): Promise<Response> {
 
     console.log(arg.body, 'body')
+    arg.method = arg.method ?? 'POST'
+
+    const db = getDatabase()
+    const policyDecision = checkNetworkUrl(url, policyFromDatabase(db));
+    if (!policyDecision.allowed) {
+        addFetchLog({
+            body: typeof arg.body === 'string' ? arg.body : '',
+            headers: arg.headers,
+            response: policyDecision.reason,
+            success: false,
+            url: url,
+            resType: 'stream',
+            chatId: arg.chatId,
+            status: 451
+        })
+        return new Response(JSON.stringify({
+            error: 'network_blocked',
+            reason: policyDecision.reason,
+            url: policyDecision.url?.toString() ?? null
+        }), {
+            status: 451,
+            statusText: 'Blocked by local-only network policy',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+    }
+
     if (arg.body === undefined && (arg.method === 'POST' || arg.method === 'PUT')) {
         throw new Error('Body is required for POST and PUT requests')
     }
-
-    arg.method = arg.method ?? 'POST'
 
     let headers = arg.headers ?? {}
     let realBody: Uint8Array
@@ -1447,7 +1478,6 @@ export async function fetchNative(url: string, arg: {
         throw new Error('Invalid body type')
     }
 
-    const db = getDatabase()
     let throughProxy = (!isTauri) && (!isNodeServer) && (!db.usePlainFetch)
     let fetchLogIndex = addFetchLog({
         body: new TextDecoder().decode(realBody),

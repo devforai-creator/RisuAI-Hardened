@@ -20,6 +20,7 @@ import katex from 'katex'
 import { getModelInfo } from './model/modellist';
 import { registerCBS, type matcherArg, type RegisterCallback } from './cbs';
 import cssSelectorParser from 'postcss-selector-parser'
+import { HARDENED_LOCAL_ONLY } from './security/hardening';
 
 const markdownItOptions = {
     html: true,
@@ -45,12 +46,23 @@ mdHighlight.disable(['code'])
 
 DOMPurify.addHook("uponSanitizeElement", (node: HTMLElement, data) => {
     if (data.tagName === "iframe") {
+       if (HARDENED_LOCAL_ONLY) {
+          return node.parentNode.removeChild(node);
+       }
        const src = node.getAttribute("src") || "";
        if (!src.startsWith("https://www.youtube.com/embed/")) {
           return node.parentNode.removeChild(node);
        }
     }
     if(data.tagName === 'img'){
+        if (HARDENED_LOCAL_ONLY) {
+            const src = node.getAttribute("src") || "";
+            if (src.startsWith("http://") || src.startsWith("https://")) {
+                node.setAttribute("src", "/none.webp");
+                node.setAttribute("alt", "?");
+            }
+            return;
+        }
         // Hide external images when hideAllImages is enabled
         if(DBState.db?.hideAllImages){
             const src = node.getAttribute("src") || "";
@@ -77,7 +89,7 @@ DOMPurify.addHook("uponSanitizeAttribute", (node, data) => {
     switch(data.attrName){
         case 'style':{
             // Remove background-image URLs when hideAllImages is enabled
-            if(DBState.db?.hideAllImages && data.attrValue){
+            if((HARDENED_LOCAL_ONLY || DBState.db?.hideAllImages) && data.attrValue){
                 // Remove background-image property from inline styles
                 data.attrValue = data.attrValue.replace(/background(-image)?:\s*url\([^)]*\);?/gi, '')
                 // Also remove background property if it contains url()
@@ -101,6 +113,10 @@ DOMPurify.addHook("uponSanitizeAttribute", (node, data) => {
         }
         case 'href':{
             if(data.attrValue.startsWith('http://') || data.attrValue.startsWith('https://')){
+                if (HARDENED_LOCAL_ONLY) {
+                    data.attrValue = ''
+                    break
+                }
                 node.setAttribute('target', '_blank')
                 break
             }
