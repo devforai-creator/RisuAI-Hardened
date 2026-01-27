@@ -20,6 +20,7 @@
     import PlaygroundMcp from "./PlaygroundMCP.svelte";
     import PlaygroundDocs from "./PlaygroundDocs.svelte";
     import PlaygroundInlayExplorer from './PlaygroundInlayExplorer.svelte';
+    import { HARDENED_DISABLE_MCP } from "src/ts/security/hardening";
 
     let easterEggTouch = $state(0)
 
@@ -109,11 +110,13 @@
             }}>
                 <h1 class="text-2xl font-bold text-start">{language.translator}</h1>
             </button>
-            <button class="bg-darkbg rounded-md p-6 flex flex-col transition-shadow hover:ring-1" onclick={() => {
-                PlaygroundStore.set(12)
-            }}>
-                <h1 class="text-2xl font-bold text-start">MCP</h1>
-            </button>
+            {#if !HARDENED_DISABLE_MCP}
+                <button class="bg-darkbg rounded-md p-6 flex flex-col transition-shadow hover:ring-1" onclick={() => {
+                    PlaygroundStore.set(12)
+                }}>
+                    <h1 class="text-2xl font-bold text-start">MCP</h1>
+                </button>
+            {/if}
             <button class="bg-darkbg rounded-md p-6 flex flex-col transition-shadow hover:ring-1" onclick={() => {
                 PlaygroundStore.set(14)
             }}>
@@ -184,7 +187,7 @@
             {#if $PlaygroundStore === 11}
                 <PlaygroundTranslation/>
             {/if}
-            {#if $PlaygroundStore === 12}
+            {#if $PlaygroundStore === 12 && !HARDENED_DISABLE_MCP}
                 <PlaygroundMcp/>
             {/if}
             {#if $PlaygroundStore === 13}

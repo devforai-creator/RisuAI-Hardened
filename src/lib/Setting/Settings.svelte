@@ -23,6 +23,7 @@
   import { isLite } from "src/ts/lite";
     import HotkeySettings from "./Pages/HotkeySettings.svelte";
     import PluginDefinedIcon from "../Others/PluginDefinedIcon.svelte";
+    import { HARDENED_DISABLE_PLUGINS } from "src/ts/security/hardening";
 
     let openLoreList = $state(false)
     if(window.innerWidth >= 900 && $SettingsMenuIndex === -1 && !$MobileGUI){
@@ -105,15 +106,17 @@
                         <PackageIcon />
                         <span>{language.modules}</span>
                     </button>
-                    <button class="flex gap-2 items-center hover:text-textcolor"
-                        class:text-textcolor={$SettingsMenuIndex === 4}
-                        class:text-textcolor2={$SettingsMenuIndex !== 4}
-                        onclick={() => {
-                        $SettingsMenuIndex = 4
-                    }}>
-                        <CodeIcon />
-                        <span>{language.plugin}</span>
-                    </button>
+                    {#if !HARDENED_DISABLE_PLUGINS}
+                        <button class="flex gap-2 items-center hover:text-textcolor"
+                            class:text-textcolor={$SettingsMenuIndex === 4}
+                            class:text-textcolor2={$SettingsMenuIndex !== 4}
+                            onclick={() => {
+                            $SettingsMenuIndex = 4
+                        }}>
+                            <CodeIcon />
+                            <span>{language.plugin}</span>
+                        </button>
+                    {/if}
                 {/if}
                 <button class="flex gap-2 items-center hover:text-textcolor"
                     class:text-textcolor={$SettingsMenuIndex === 0}
@@ -183,7 +186,11 @@
                     {:else if $SettingsMenuIndex === 3}
                         <DisplaySettings />
                     {:else if $SettingsMenuIndex === 4}
-                        <PluginSettings />
+                        {#if !HARDENED_DISABLE_PLUGINS}
+                            <PluginSettings />
+                        {:else}
+                            <UserSettings />
+                        {/if}
                     {:else if $SettingsMenuIndex === 5}
                         <FilesSettings />
                     {:else if $SettingsMenuIndex === 6}

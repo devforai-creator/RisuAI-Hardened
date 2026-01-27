@@ -6,6 +6,7 @@
     
     import { DBState } from 'src/ts/stores.svelte';
     import { customProviderStore } from "src/ts/plugins/plugins.svelte";
+    import { HARDENED_DISABLE_PLUGINS } from "src/ts/security/hardening";
     import { downloadFile } from "src/ts/globalApi.svelte";
     import { isTauri } from "src/ts/platform"
     import { tokenizeAccurate, tokenizerList } from "src/ts/tokenizer";
@@ -286,7 +287,7 @@ let tokens = $state({
         {/if}
     </div>
 
-    {#if DBState.db.aiModel === 'custom' || DBState.db.subModel === 'custom'}
+    {#if !HARDENED_DISABLE_PLUGINS && (DBState.db.aiModel === 'custom' || DBState.db.subModel === 'custom')}
         <span class="text-textcolor mt-2">{language.plugin}</span>
         <SelectInput className="mt-2 mb-4" bind:value={DBState.db.currentPluginProvider}>
             <OptionInput value="">None</OptionInput>

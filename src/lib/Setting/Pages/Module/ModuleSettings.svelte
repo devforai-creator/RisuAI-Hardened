@@ -12,6 +12,7 @@
     import TextInput from "src/lib/UI/GUI/TextInput.svelte";
     import { onDestroy } from "svelte";
     import { importMCPModule } from "src/ts/process/mcp/mcp";
+    import { HARDENED_DISABLE_MCP } from "src/ts/security/hardening";
     let tempModule:RisuModule = $state({
         name: '',
         description: '',
@@ -134,11 +135,13 @@
         }}>
             <PlusIcon />
         </button>
-        <button class="text-textcolor2 hover:text-blue-500 mr-2 cursor-pointer" onclick={async () => {
-            importMCPModule()
-        }}>
-            <Waypoints />
-        </button>
+        {#if !HARDENED_DISABLE_MCP}
+            <button class="text-textcolor2 hover:text-blue-500 mr-2 cursor-pointer" onclick={async () => {
+                importMCPModule()
+            }}>
+                <Waypoints />
+            </button>
+        {/if}
         <button class="text-textcolor2 hover:text-blue-500 mr-2 cursor-pointer" onclick={async () => {
             importModule()
         }}>

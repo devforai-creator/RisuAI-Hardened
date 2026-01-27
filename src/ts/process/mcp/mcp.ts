@@ -8,6 +8,7 @@ import type { MCPClientLike } from "./internalmcp";
 import localforage from "localforage";
 import { isTauri } from "src/ts/platform"
 import { sleep } from "src/ts/util";
+import { HARDENED_DISABLE_MCP } from "src/ts/security/hardening";
 
 export type MCPToolWithURL = MCPTool & {
     mcpURL: string;
@@ -16,6 +17,9 @@ export type MCPToolWithURL = MCPTool & {
 export const MCPs:Record<string,MCPClient|MCPClientLike> = {};
 
 export async function initializeMCPs(additionalMCPs?:string[]) {
+    if (HARDENED_DISABLE_MCP) {
+        return;
+    }
     const db = getDatabase()
     const mcpUrls = getModuleMcps()
     if(additionalMCPs && additionalMCPs.length > 0) {
@@ -180,6 +184,9 @@ export async function initializeMCPs(additionalMCPs?:string[]) {
 }
 
 export async function getMCPTools(additionalMCPs?:string[]) {
+    if (HARDENED_DISABLE_MCP) {
+        return [];
+    }
     await initializeMCPs(additionalMCPs);
     const tools:MCPToolWithURL[] = [];
     for(const key of Object.keys(MCPs)) {
@@ -196,6 +203,9 @@ export async function getMCPTools(additionalMCPs?:string[]) {
 }
 
 export async function getMCPMeta(additionalMCPs?:string[]) {
+    if (HARDENED_DISABLE_MCP) {
+        return {};
+    }
     await initializeMCPs(additionalMCPs);
     const meta:Record<string, typeof MCPClient.prototype.serverInfo> = {};
     for(const key of Object.keys(MCPs)) {
@@ -205,6 +215,12 @@ export async function getMCPMeta(additionalMCPs?:string[]) {
 }
 
 export async function callMCPTool(methodName:string, args:any):Promise<RPCToolCallContent[]> {
+    if (HARDENED_DISABLE_MCP) {
+        return [{
+            type: 'text',
+            text: 'MCP is disabled in the hardened build.'
+        }];
+    }
     await initializeMCPs();
     for(const key of Object.keys(MCPs)) {
         const tools = await MCPs[key].getToolList();
@@ -221,15 +237,28 @@ export async function callMCPTool(methodName:string, args:any):Promise<RPCToolCa
 
 //Currently just a wrapper for getMCPTools, but can be extended later for more than MCPs
 export async function getTools(){
+    if (HARDENED_DISABLE_MCP) {
+        return [];
+    }
     return await getMCPTools();
 }
 
 //Currently just a wrapper for callMCPTool, but can be extended later for more than MCPs
 export async function callTool(methodName:string, args:any) {
+    if (HARDENED_DISABLE_MCP) {
+        return [{
+            type: 'text',
+            text: 'MCP is disabled in the hardened build.'
+        }];
+    }
     return await callMCPTool(methodName, args);
 }
 
 export async function importMCPModule(){
+    if (HARDENED_DISABLE_MCP) {
+        alertError('MCP is disabled in the hardened build.');
+        return;
+    }
     const x = await alertInput('Please enter the URL of the MCP module to import:', [
         ['internal:aiaccess', 'LLM Call Client (internal:aiaccess)'],
         ['internal:risuai', 'Risu Access Client (internal:risuai)'],

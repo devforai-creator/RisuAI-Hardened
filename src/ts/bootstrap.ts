@@ -34,6 +34,7 @@ import type { AccountStorage } from "./storage/accountStorage";
 import { makeColdData } from "./process/coldstorage.svelte";
 import { installFetchGuard } from "./security/networkGuard";
 import { policyFromDatabase } from "./security/networkPolicy";
+import { HARDENED_DISABLE_PLUGINS } from "./security/hardening";
 import {
     forageStorage,
     saveDb,
@@ -203,7 +204,9 @@ export async function loadData() {
             }
             LoadingStatusState.text = "Loading Plugins..."
             try {
-                await loadPlugins()
+                if (!HARDENED_DISABLE_PLUGINS) {
+                    await loadPlugins()
+                }
             } catch (error) { }
             if (getDatabase().account) {
                 LoadingStatusState.text = "Checking Account Data..."

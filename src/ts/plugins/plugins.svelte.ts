@@ -11,6 +11,7 @@ import { checkCodeSafety } from "./pluginSafety";
 import { SafeDocument, SafeIdbFactory, SafeLocalStorage } from "./pluginSafeClass";
 import { loadV3Plugins } from "./apiV3/v3.svelte";
 import { pluginCodeTranspiler } from "./apiV3/transpiler";
+import { HARDENED_DISABLE_PLUGINS } from "../security/hardening";
 
 export const customProviderStore = writable([] as string[])
 
@@ -35,6 +36,10 @@ interface ProviderPluginCustomLink {
 export type RisuPlugin = ProviderPlugin
 
 export async function createBlankPlugin(){
+    if (HARDENED_DISABLE_PLUGINS) {
+        alertError("Plugins are disabled in this hardened build.");
+        return;
+    }
     await importPlugin(
 `
 //@name New Plugin
@@ -63,6 +68,9 @@ const compareVersions = (v1: string, v2: string): 0|1|-1 => {
 const updateCache = new Map<string, { version: string, updateURL: string } | undefined>();
 
 export const checkPluginUpdate = async (plugin: RisuPlugin) => {
+    if (HARDENED_DISABLE_PLUGINS) {
+        return;
+    }
     try {
         if(!plugin.updateURL){
             return
@@ -106,6 +114,10 @@ export const checkPluginUpdate = async (plugin: RisuPlugin) => {
 }
 
 export async function updatePlugin(plugin: RisuPlugin) {
+    if (HARDENED_DISABLE_PLUGINS) {
+        alertError("Plugins are disabled in this hardened build.");
+        return false
+    }
     try {
         if(!plugin.updateURL){
             return false
@@ -131,6 +143,10 @@ export async function importPlugin(code:string|null = null, argu:{
     isHotReload?: boolean
     isTypescript?: boolean
 } = {}) {
+    if (HARDENED_DISABLE_PLUGINS) {
+        alertError("Plugins are disabled in this hardened build.");
+        return;
+    }
     try {
         let jsFile = ''
         let db = getDatabase()
@@ -415,6 +431,10 @@ export async function importPlugin(code:string|null = null, argu:{
 let pluginTranslator = false
 
 export async function loadPlugins() {
+    if (HARDENED_DISABLE_PLUGINS) {
+        customProviderStore.set([])
+        return
+    }
     console.log('Loading plugins...')
     let db = getDatabase()
 
@@ -902,5 +922,3 @@ export async function pluginProcess(arg: {
         content: language.pluginProviderNotFound
     }
 }
-
-
