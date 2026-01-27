@@ -35,6 +35,24 @@ describe('networkPolicy', () => {
         expect(decision.allowed).toBe(true);
     });
 
+    it('allows asset protocol urls', () => {
+        const policy = buildNetworkPolicy();
+        const decision = checkNetworkUrl('asset://localhost/path/to/image.png', policy);
+        expect(decision.allowed).toBe(true);
+    });
+
+    it('allows tauri protocol urls', () => {
+        const policy = buildNetworkPolicy();
+        const decision = checkNetworkUrl('tauri://localhost/some/path', policy);
+        expect(decision.allowed).toBe(true);
+    });
+
+    it('allows ipc protocol urls', () => {
+        const policy = buildNetworkPolicy();
+        const decision = checkNetworkUrl('ipc://localhost/plugin:updater|check', policy);
+        expect(decision.allowed).toBe(true);
+    });
+
     it('allows Tauri internal host asset.localhost', () => {
         const policy = buildNetworkPolicy();
         const decision = checkNetworkUrl('http://asset.localhost/path/to/image.png', policy);
@@ -51,5 +69,12 @@ describe('networkPolicy', () => {
         const policy = buildNetworkPolicy();
         const decision = checkNetworkUrl('http://tauri.localhost/some/path', policy);
         expect(decision.allowed).toBe(true);
+    });
+
+    it('blocks non-internal localhost subdomains', () => {
+        const policy = buildNetworkPolicy();
+        const decision = checkNetworkUrl('https://foo.localhost/some/path', policy);
+        expect(decision.allowed).toBe(false);
+        expect(decision.reason).toMatch(/allowlist/i);
     });
 });
