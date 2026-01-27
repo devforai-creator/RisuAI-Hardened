@@ -1,4 +1,4 @@
 [build]
-# target = 'x86_64-pc-windows-msvc'  # WSL에서는 주석 처리
+target = 'x86_64-pc-windows-msvc'
 
 [target]
