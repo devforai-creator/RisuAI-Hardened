@@ -34,4 +34,22 @@ describe('networkPolicy', () => {
         const decision = checkNetworkUrl('http://127.0.0.1:8080/api', policy);
         expect(decision.allowed).toBe(true);
     });
+
+    it('allows Tauri internal host asset.localhost', () => {
+        const policy = buildNetworkPolicy();
+        const decision = checkNetworkUrl('http://asset.localhost/path/to/image.png', policy);
+        expect(decision.allowed).toBe(true);
+    });
+
+    it('allows Tauri internal host ipc.localhost', () => {
+        const policy = buildNetworkPolicy();
+        const decision = checkNetworkUrl('http://ipc.localhost/plugin:updater|check', policy);
+        expect(decision.allowed).toBe(true);
+    });
+
+    it('allows Tauri internal host tauri.localhost', () => {
+        const policy = buildNetworkPolicy();
+        const decision = checkNetworkUrl('http://tauri.localhost/some/path', policy);
+        expect(decision.allowed).toBe(true);
+    });
 });
