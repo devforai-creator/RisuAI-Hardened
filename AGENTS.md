@@ -7,12 +7,20 @@ Risuai is a cross-platform AI chatting application built with:
 - **Styling**: Tailwind CSS 4
 - **Package Manager**: pnpm
 
-The application allows users to chat with various AI models (OpenAI, Claude, Gemini, and more) through a single unified interface. It features a rich user interface with support for themes, plugins, custom assets, and advanced memory systems.
+The upstream application allows users to chat with various AI models (OpenAI, Claude, Gemini, and more) through a single unified interface. This fork (RisuAI-Hardened) is being re-architected for **local-only Tauri desktop use**, with **default-deny networking** and **removal of high-risk features** (plugins, MCP, cloud sync, proxy servers, web builds).
+
+## Fork Goals (RisuAI-Hardened)
+
+- Tauri desktop only; web/server builds are out of scope.
+- Network egress only to **explicitly allowed** LLM endpoints (and optional loopback).
+- Remove plugin system, MCP, and any untrusted code execution paths.
+- Remove cloud sync, hub/realm upload, proxy relays, and auto-updates.
+- Prefer local storage only; no cross-device sync.
 
 ## Directory Structure
 
 ```
-risuai-newest/
+RisuAI-Hardened/
 ├── src/                    # Main application source code
 │   ├── ts/                 # TypeScript business logic
 │   ├── lib/                # Svelte UI components
@@ -20,12 +28,13 @@ risuai-newest/
 │   ├── etc/                # Documentation and extras
 │   └── test/               # Test files
 ├── src-tauri/              # Tauri desktop backend (Rust)
-├── server/                 # Self-hosting server implementations
-│   ├── node/               # Node.js server (current)
-│   └── hono/               # Hono framework server (future)
+├── server/                 # Legacy self-hosting server (disabled in hardened fork)
+│   ├── node/               # Node.js server (legacy)
+│   └── hono/               # Hono framework server (legacy)
 ├── public/                 # Static assets
 ├── dist/                   # Build output
 ├── resources/              # Application resources
+├── docs/                   # Project documentation (see hardening roadmap)
 └── .github/workflows/      # CI/CD pipelines
 ```
 
@@ -37,12 +46,12 @@ risuai-newest/
 |----------------|---------|
 | `storage/` | Data persistence layer (database, save files, platform adapters) |
 | `process/` | Core processing logic (chat, requests, memory, models) |
-| `plugins/` | Plugin system (API v3.0, sandboxing, security) |
+| `plugins/` | Plugin system (legacy; to be removed in hardened fork) |
 | `gui/` | GUI utilities (colorscheme, highlight, animation) |
-| `drive/` | Cloud sync and backup |
+| `drive/` | Cloud sync and backup (legacy; remove) |
 | `translator/` | Translation system |
 | `model/` | Model definitions and integrations |
-| `sync/` | Multi-user synchronization |
+| `sync/` | Multi-user synchronization (legacy; remove) |
 | `cbs.ts` | Callback system |
 | `characterCards.ts` | Character card import/export |
 | `parser.svelte.ts` | Message parsing |
@@ -59,14 +68,14 @@ risuai-newest/
 | `memory/` | Memory systems (HypaMemoryV2/V3, SupaMemory, HanuraiMemory) |
 | `models/` | AI model integrations (NAI, OpenRouter, Ooba, local models) |
 | `templates/` | Prompt templates and formatting |
-| `mcp/` | Model Context Protocol support |
+| `mcp/` | Model Context Protocol support (legacy; remove) |
 | `files/` | File handling (inlays, multisend) |
 | `embedding/` | Vector embeddings |
 | `lorebook.svelte.ts` | Lorebook/world info management |
 | `scriptings.ts` | Scripting system |
 | `triggers.ts` | Event triggers |
-| `stableDiff.ts` | Stable Diffusion integration |
-| `tts.ts` | Text-to-speech |
+| `stableDiff.ts` | Stable Diffusion integration (external endpoints; review/remove) |
+| `tts.ts` | Text-to-speech (external endpoints; review/remove) |
 
 #### `/src/lib` - Svelte UI Components
 
@@ -92,28 +101,16 @@ risuai-newest/
 ### Development
 
 ```bash
-# Web development server
-pnpm dev
-
-# Tauri desktop development
+# Tauri desktop development (preferred in hardened fork)
 pnpm tauri dev
 ```
 
 ### Production Builds
 
 ```bash
-# Web build
-pnpm build
-
-# Web build for hosting
-pnpm buildsite
-
 # Tauri desktop build
 pnpm tauribuild
 pnpm tauri build
-
-# Hono server build
-pnpm hono:build
 ```
 
 ### Type Checking
@@ -170,15 +167,9 @@ Key stores:
 3. Memory systems for context management
 4. Lorebook integration for world info
 
-### Plugin System (API v3.0)
+### Plugin System (Legacy)
 
-- Iframe-based sandboxing for security
-- SafeDocument/SafeElement wrappers for DOM access
-- Plugin storage (save-specific and device-specific)
-- Custom AI provider support
-- Hot reload support for development
-
-See `plugins.md` for comprehensive plugin development guide.
+The upstream plugin system is **not supported** in the hardened fork and is planned for removal.
 
 ### UI Architecture
 
@@ -199,7 +190,7 @@ See `plugins.md` for comprehensive plugin development guide.
 - AI Horde
 - Ollama
 - Ooba (Text Generation WebUI)
-- Custom providers via plugins
+- Local endpoints (loopback only, if explicitly enabled)
 
 ## Internationalization
 
@@ -216,29 +207,26 @@ Language files are located in `/src/lang/`.
 
 ## Deployment Targets
 
-- **Web**: Vite static site
 - **Desktop (Tauri)**: Windows (NSIS), macOS (DMG, APP), Linux (DEB, RPM, AppImage)
-- **Docker**: Container (port 6001)
-- **Self-hosted**: Node.js or Hono server
 
-## Security
+## Security (Hardened Fork)
 
-- Plugin sandboxing with iframe isolation
-- DOM sanitization with DOMPurify
-- Buffer encryption/decryption utilities
-- CORS handling with proxy support
-- Tauri HTTP plugin for native fetch
+- Default-deny networking with explicit allowlist (LLM endpoints only).
+- No proxy relays, cloud sync, or hub/realm uploads.
+- Plugin/MCP systems removed or disabled.
+- Tighten Tauri capabilities (HTTP, shell, updater, FS scopes).
 
 ## Documentation
 
 | File | Description |
 |------|-------------|
 | `README.md` | Main project documentation |
-| `plugins.md` | Plugin development guide |
+| `plugins.md` | Upstream plugin development guide (legacy) |
 | `AGENTS.md` | AI assistant documentation |
 | `src/ts/plugins/migrationGuide.md` | Plugin API migration guide |
 | `server/hono/README.md` | Hono server documentation |
 | `server/node/readme.md` | Node server documentation |
+| `docs/HARDENING_ROADMAP.md` | Hardening roadmap for this fork |
 
 ## Contribution Guidelines
 
