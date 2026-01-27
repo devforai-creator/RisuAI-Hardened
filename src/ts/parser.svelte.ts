@@ -21,6 +21,7 @@ import { getModelInfo } from './model/modellist';
 import { registerCBS, type matcherArg, type RegisterCallback } from './cbs';
 import cssSelectorParser from 'postcss-selector-parser'
 import { HARDENED_LOCAL_ONLY } from './security/hardening';
+import { checkNetworkUrl, policyFromDatabase } from './security/networkPolicy';
 
 const markdownItOptions = {
     html: true,
@@ -57,9 +58,14 @@ DOMPurify.addHook("uponSanitizeElement", (node: HTMLElement, data) => {
     if(data.tagName === 'img'){
         if (HARDENED_LOCAL_ONLY) {
             const src = node.getAttribute("src") || "";
-            if (src.startsWith("http://") || src.startsWith("https://")) {
-                node.setAttribute("src", "/none.webp");
-                node.setAttribute("alt", "?");
+            if (src) {
+                const policy = policyFromDatabase(DBState.db);
+                const decision = checkNetworkUrl(src, policy);
+                console.log("[DOMPurify IMG]", { src, allowed: decision.allowed, reason: decision.reason });
+                if (!decision.allowed) {
+                    node.setAttribute("src", "/none.webp");
+                    node.setAttribute("alt", "?");
+                }
             }
             return;
         }

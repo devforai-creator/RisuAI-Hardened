@@ -14,7 +14,8 @@ export type NetworkDecision = {
 
 const INTERNAL_HOSTS = new Set([
     'asset.localhost',
-    'tauri.localhost'
+    'tauri.localhost',
+    'ipc.localhost'
 ]);
 
 export const DEFAULT_LLM_ALLOWLIST = [
