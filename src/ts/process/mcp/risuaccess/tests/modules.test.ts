@@ -3,10 +3,9 @@ import type { RisuModule } from 'src/ts/process/modules'
 import type { customscript, loreBook } from 'src/ts/storage/database.svelte'
 import { DBState } from 'src/ts/stores.svelte'
 import { beforeEach, expect, test, vi } from 'vitest'
+import { HARDENED_DISABLE_MCP } from 'src/ts/security/hardening'
 import type { RPCToolCallTextContent } from '../../mcplib'
 import { ModuleHandler } from '../modules'
-import { writable } from 'svelte/store'
-
 //#region module mocks
 
 // Suppress consoles
@@ -39,7 +38,11 @@ vi.mock(import('src/ts/stores.svelte'), () => {
     selIdState: {
       selId: 0,
     },
-    selectedCharID: writable(0),
+    selectedCharID: {
+      subscribe: vi.fn(),
+      set: vi.fn(),
+      update: vi.fn(),
+    },
   } as typeof import('src/ts/stores.svelte')
 })
 
@@ -88,7 +91,9 @@ beforeEach(() => {
   vi.resetAllMocks()
 })
 
-test('lists installed modules with pagination', async () => {
+const runTest = HARDENED_DISABLE_MCP ? test.skip : test
+
+runTest('lists installed modules with pagination', async () => {
   const instance = new ModuleHandler()
 
   const modules = Array(10)
@@ -107,7 +112,7 @@ test('lists installed modules with pagination', async () => {
   expect(await instance.handle('risu-list-modules', {})).toEqual(makeToolResponse([]))
 })
 
-test('retrieves bgEmbedding, toggles, description, id, enabled, low level access, name fields of a module', async () => {
+runTest('retrieves bgEmbedding, toggles, description, id, enabled, low level access, name fields of a module', async () => {
   const instance = new ModuleHandler()
 
   const modules = Array(10)
@@ -149,7 +154,7 @@ test('retrieves bgEmbedding, toggles, description, id, enabled, low level access
   )
 })
 
-test('lists lorebooks of a module with pagination', async () => {
+runTest('lists lorebooks of a module with pagination', async () => {
   const instance = new ModuleHandler()
 
   const module: RisuModule = {
@@ -169,7 +174,7 @@ test('lists lorebooks of a module with pagination', async () => {
   expect(await instance.handle('risu-list-module-lorebooks', { id: 'A' })).toEqual(makeToolResponse([]))
 })
 
-test('retrieves fields of a lorebook', async () => {
+runTest('retrieves fields of a lorebook', async () => {
   const instance = new ModuleHandler()
 
   const module: RisuModule = {
@@ -183,7 +188,7 @@ test('retrieves fields of a lorebook', async () => {
   expect(await instance.handle('risu-get-module-lorebook', { id: 'A', names: ['0', '2', '99'] })).toMatchSnapshot()
 })
 
-test('lists all regex scripts of a module', async () => {
+runTest('lists all regex scripts of a module', async () => {
   const instance = new ModuleHandler()
 
   const module: RisuModule = {
@@ -201,7 +206,7 @@ test('lists all regex scripts of a module', async () => {
   expect(await instance.handle('risu-get-module-regex-scripts', { id: 'A' })).toEqual(makeToolResponse([]))
 })
 
-test('retrieves a module Lua script', async () => {
+runTest('retrieves a module Lua script', async () => {
   const instance = new ModuleHandler()
 
   const module: RisuModule = {
@@ -223,7 +228,7 @@ test('retrieves a module Lua script', async () => {
   expect(await instance.handle('risu-get-module-lua-script', { id: 'A' })).toEqual(makeToolResponse('print("hello")'))
 })
 
-test('errs retrieving a module Lua script if it is not using one', async () => {
+runTest('errs retrieving a module Lua script if it is not using one', async () => {
   const instance = new ModuleHandler()
 
   DBState.db.modules = [makeModule('A')]
@@ -231,7 +236,7 @@ test('errs retrieving a module Lua script if it is not using one', async () => {
   expect(await instance.handle('risu-get-module-lua-script', { id: 'A' })).toEqual(makeToolResponse('Error: This module does not contain a Lua trigger.'))
 })
 
-test('errs if module not found', async () => {
+runTest('errs if module not found', async () => {
   const instance = new ModuleHandler()
   const subjects = [
     'risu-get-module-info',
