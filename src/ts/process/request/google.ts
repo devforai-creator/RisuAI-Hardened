@@ -423,6 +423,8 @@ export async function requestGoogleCloudVertex(arg:RequestDataArgumentExtended):
             messagesToCache: messagesToCache
         })
 
+        console.debug('[Gemini Cache] Decision:', cacheDecision)
+
         if (cacheDecision.enabled) {
             const ttlSeconds = Number.isFinite(db.geminiExplicitCacheTtl) && db.geminiExplicitCacheTtl > 0
                 ? Math.floor(db.geminiExplicitCacheTtl)
@@ -437,6 +439,8 @@ export async function requestGoogleCloudVertex(arg:RequestDataArgumentExtended):
                 chatId: arg.chatId
             })
 
+            console.debug('[Gemini Cache] Creation result:', geminiCacheResult)
+
             if (!geminiCacheResult.success) {
                 return {
                     type: 'fail',
@@ -447,6 +451,7 @@ export async function requestGoogleCloudVertex(arg:RequestDataArgumentExtended):
     }
 
     if (geminiCacheResult?.success && lastMessage) {
+        console.debug('[Gemini Cache] Using cache:', geminiCacheResult.cacheName, 'with', geminiCacheResult.cachedTokenCount, 'tokens')
         body.cachedContent = geminiCacheResult.cacheName
         body.contents = [lastMessage]
         delete body.systemInstruction
