@@ -114,6 +114,11 @@ let tokens = $state({
     {#if modelInfo.provider === LLMProvider.GoogleCloud || subModelInfo.provider === LLMProvider.GoogleCloud}
         <span class="text-textcolor">GoogleAI API Key</span>
         <TextInput marginBottom={true} size={"sm"} placeholder="..." hideText={DBState.db.hideApiKey} bind:value={DBState.db.google.accessToken}/>
+        <Check bind:check={DBState.db.geminiExplicitCacheEnabled} name="Enable Gemini explicit cache"/>
+        {#if DBState.db.geminiExplicitCacheEnabled}
+            <span class="text-textcolor mt-2">Gemini cache TTL (seconds)</span>
+            <NumberInput marginBottom={true} min={1} bind:value={DBState.db.geminiExplicitCacheTtl}/>
+        {/if}
     {/if}
     {#if modelInfo.provider === LLMProvider.VertexAI || subModelInfo.provider === LLMProvider.VertexAI}
         <span class="text-textcolor">Project ID</span>
