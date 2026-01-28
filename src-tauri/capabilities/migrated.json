@@ -40,19 +40,52 @@
       "identifier": "http:default",
       "allow": [
         {
-          "url": "https://*/*"
+          "url": "https://api.openai.com/*"
         },
         {
-          "url": "https://*/**/*"
+          "url": "https://openrouter.ai/*"
         },
         {
-          "url": "http://*/*"
+          "url": "https://api.anthropic.com/*"
         },
         {
-          "url": "http://*/**/*"
+          "url": "https://api.mistral.ai/*"
         },
         {
-          "url": "http://*:**"
+          "url": "https://api.deepinfra.com/*"
+        },
+        {
+          "url": "https://api.deepseek.com/*"
+        },
+        {
+          "url": "https://api.cohere.com/*"
+        },
+        {
+          "url": "https://api.novelai.net/*"
+        },
+        {
+          "url": "https://text.novelai.net/*"
+        },
+        {
+          "url": "https://stablehorde.net/*"
+        },
+        {
+          "url": "https://api.tringpt.com/*"
+        },
+        {
+          "url": "https://generativelanguage.googleapis.com/*"
+        },
+        {
+          "url": "https://oauth2.googleapis.com/*"
+        },
+        {
+          "url": "https://aiplatform.googleapis.com/*"
+        },
+        {
+          "url": "https://*-aiplatform.googleapis.com/*"
+        },
+        {
+          "url": "https://bedrock-runtime.*.amazonaws.com/*"
         }
       ]
     },
