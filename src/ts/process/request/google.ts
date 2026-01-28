@@ -531,6 +531,10 @@ export async function requestGoogleCloudVertex(arg:RequestDataArgumentExtended):
     
     let url = ''
     let apiKey = arg.key || db.google.accessToken
+    const useQueryKey = !!arg.customURL
+    if (!useQueryKey && arg.modelInfo.format === LLMFormat.GoogleCloud && apiKey) {
+        headers['x-goog-api-key'] = apiKey
+    }
     
     if(arg.customURL){
         let baseURL = arg.customURL
@@ -557,10 +561,10 @@ export async function requestGoogleCloudVertex(arg:RequestDataArgumentExtended):
         
         }
     else if(arg.modelInfo.format === LLMFormat.GoogleCloud && arg.useStreaming){
-        url = `https://generativelanguage.googleapis.com/v1beta/models/${arg.modelInfo.internalID}:streamGenerateContent?key=${apiKey}&alt=sse`
+        url = `https://generativelanguage.googleapis.com/v1beta/models/${arg.modelInfo.internalID}:streamGenerateContent?alt=sse`
     }
     else{
-        url = `https://generativelanguage.googleapis.com/v1beta/models/${arg.modelInfo.internalID}:generateContent?key=${apiKey}`
+        url = `https://generativelanguage.googleapis.com/v1beta/models/${arg.modelInfo.internalID}:generateContent`
     }
     // will return error if functionDeclarations is empty
     if(body.tools?.functionDeclarations?.length === 0){

@@ -198,11 +198,16 @@ async function tokenizeGoogleCloud(text:string) {
         return new Uint32Array(count)
     }
 
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model.internalID}:countTokens?key=${db.google?.accessToken}`, {
+    const headers: { [key: string]: string } = {
+        "Content-Type": "application/json",
+    }
+    if (db.google?.accessToken) {
+        headers["x-goog-api-key"] = db.google.accessToken
+    }
+
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model.internalID}:countTokens`, {
         method: 'POST',
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
             contents: [{
                 parts:[{

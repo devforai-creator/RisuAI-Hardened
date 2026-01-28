@@ -699,11 +699,12 @@ export async function generateAIImage(genPrompt:string, currentChar:character, n
             }
         }
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${db.google.accessToken}`
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict`
 
         const res = await globalFetch(url, {
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                ...(db.google?.accessToken ? { "x-goog-api-key": db.google.accessToken } : {})
             },
             method: 'POST',
             body: body,
