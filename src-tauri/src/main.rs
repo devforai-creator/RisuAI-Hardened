@@ -20,6 +20,7 @@ use oauth2::{
     TokenResponse,
     TokenUrl
 };
+use reqwest::redirect::Policy;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use serde_json::json;
 use serde_json::Value;
@@ -30,6 +31,104 @@ use std::sync::{Arc, Mutex};
 use tauri::path::BaseDirectory;
 use tauri::{Listener, Manager};
 use tauri::{AppHandle, Emitter};
+use url::Url;
+
+const STREAM_FETCH_ALLOWLIST: &[&str] = &[
+    "api.openai.com",
+    "openrouter.ai",
+    "api.anthropic.com",
+    "api.mistral.ai",
+    "api.deepinfra.com",
+    "api.deepseek.com",
+    "api.cohere.com",
+    "api.novelai.net",
+    "text.novelai.net",
+    "stablehorde.net",
+    "api.tringpt.com",
+    "generativelanguage.googleapis.com",
+    "oauth2.googleapis.com",
+    "*.aiplatform.googleapis.com",
+    "bedrock-runtime.*.amazonaws.com",
+];
+
+fn normalize_host(host: &str) -> String {
+    host.trim_end_matches('.').to_ascii_lowercase()
+}
+
+fn is_loopback_host(host: &str) -> bool {
+    host == "localhost"
+        || host == "0.0.0.0"
+        || host == "127.0.0.1"
+        || host.starts_with("127.")
+        || host == "::1"
+}
+
+fn wildcard_match(host: &str, pattern: &str) -> bool {
+    if !pattern.contains('*') {
+        return host == pattern;
+    }
+
+    let h = host.as_bytes();
+    let p = pattern.as_bytes();
+    let (mut hi, mut pi) = (0usize, 0usize);
+    let mut star_idx: Option<usize> = None;
+    let mut match_idx = 0usize;
+
+    while hi < h.len() {
+        if pi < p.len() && (p[pi] == h[hi]) {
+            hi += 1;
+            pi += 1;
+        } else if pi < p.len() && p[pi] == b'*' {
+            star_idx = Some(pi);
+            match_idx = hi;
+            pi += 1;
+        } else if let Some(si) = star_idx {
+            pi = si + 1;
+            match_idx += 1;
+            hi = match_idx;
+        } else {
+            return false;
+        }
+    }
+
+    while pi < p.len() && p[pi] == b'*' {
+        pi += 1;
+    }
+
+    pi == p.len()
+}
+
+fn is_allowed_host(host: &str) -> bool {
+    let host = normalize_host(host);
+    STREAM_FETCH_ALLOWLIST
+        .iter()
+        .any(|pattern| wildcard_match(&host, &normalize_host(pattern)))
+}
+
+fn validate_streamed_fetch_url(raw_url: &str) -> Result<(), String> {
+    let parsed = Url::parse(raw_url).map_err(|e| format!("Invalid URL: {}", e))?;
+    let scheme = parsed.scheme().to_ascii_lowercase();
+    if scheme != "https" {
+        return Err(format!(
+            "Blocked by local-only network policy: insecure protocol ({}).",
+            scheme
+        ));
+    }
+    let host = parsed
+        .host_str()
+        .ok_or_else(|| "Blocked by local-only network policy: missing host.".to_string())?;
+    let host = normalize_host(host);
+    if is_loopback_host(&host) {
+        return Err("Blocked by local-only network policy: loopback endpoints are disabled.".to_string());
+    }
+    if !is_allowed_host(&host) {
+        return Err(format!(
+            "Blocked by local-only network policy: {} is not in the allowlist.",
+            host
+        ));
+    }
+    Ok(())
+}
 
 #[tauri::command]
 async fn native_request(url: String, body: String, header: String, method: String) -> String {
@@ -438,6 +537,13 @@ async fn streamed_fetch(
     app: AppHandle,
     method: String,
 ) -> String {
+    if let Err(reason) = validate_streamed_fetch_url(&url) {
+        return json!({
+            "success": false,
+            "body": reason
+        })
+        .to_string();
+    }
     //parse headers
     let headers_json: Value = match serde_json::from_str(&headers) {
         Ok(h) => h,
@@ -461,7 +567,19 @@ async fn streamed_fetch(
         return format!(r#"{{"success":false,"body":"Invalid header JSON"}}"#);
     }
 
-    let client = reqwest::Client::new();
+    let client = match reqwest::Client::builder()
+        .redirect(Policy::none())
+        .build()
+    {
+        Ok(client) => client,
+        Err(e) => {
+            return json!({
+                "success": false,
+                "body": format!("Failed to initialize HTTP client: {}", e)
+            })
+            .to_string();
+        }
+    };
     let builder: reqwest::RequestBuilder;
     if method == "POST" {
 
