@@ -1,7 +1,7 @@
 import { globalFetch } from "src/ts/globalApi.svelte"
 
-type GeminiCachePart = { text?: string; [key: string]: unknown }
-type GeminiCacheMessage = { role: string; parts: GeminiCachePart[] }
+export type GeminiCachePart = { text?: string; [key: string]: unknown }
+export type GeminiCacheMessage = { role: string; parts: GeminiCachePart[] }
 
 export const DEFAULT_GEMINI_CACHE_TTL_SECONDS = 20
 

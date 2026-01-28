@@ -10,7 +10,7 @@ import { applyParameters, type Parameter, type RequestDataArgumentExtended, type
 import { callTool, decodeToolCall, encodeToolCall } from "../mcp/mcp"
 import { alertError, alertNormal, alertWait, showHypaV2Alert } from "src/ts/alert";
 import { addFetchLog } from "src/ts/globalApi.svelte"
-import { createGeminiCache, DEFAULT_GEMINI_CACHE_TTL_SECONDS, resolveGeminiCacheDecision, type GeminiCacheResult } from "./googleCache"
+import { createGeminiCache, DEFAULT_GEMINI_CACHE_TTL_SECONDS, resolveGeminiCacheDecision, type GeminiCacheResult, type GeminiCacheMessage } from "./googleCache"
 
 type GeminiFunctionCall = {
     id?: string;
@@ -311,7 +311,7 @@ export async function requestGoogleCloudVertex(arg:RequestDataArgumentExtended):
         return arg.modelInfo.parameters.includes(v)
     })
 
-    const body = {
+    const body: Record<string, any> = {
         contents: reformatedChat,
         generation_config: applyParameters({
             "maxOutputTokens": maxTokens
@@ -399,7 +399,7 @@ export async function requestGoogleCloudVertex(arg:RequestDataArgumentExtended):
 
     const apiKey = arg.key || db.google.accessToken
     const lastMessage = reformatedChat.length > 0 ? reformatedChat[reformatedChat.length - 1] : null
-    const messagesToCache = reformatedChat.length > 0 ? reformatedChat.slice(0, -1) : []
+    const messagesToCache: GeminiCacheMessage[] = reformatedChat.length > 0 ? reformatedChat.slice(0, -1) : []
     let geminiCacheResult: GeminiCacheResult | null = null
 
     if (
