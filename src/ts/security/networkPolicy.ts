@@ -32,7 +32,8 @@ export const DEFAULT_LLM_ALLOWLIST = [
     'api.tringpt.com',
     'generativelanguage.googleapis.com',
     'oauth2.googleapis.com',
-    '*.aiplatform.googleapis.com',
+    'aiplatform.googleapis.com',
+    '*-aiplatform.googleapis.com',
     'bedrock-runtime.*.amazonaws.com'
 ];
 

@@ -47,7 +47,8 @@ const STREAM_FETCH_ALLOWLIST: &[&str] = &[
     "api.tringpt.com",
     "generativelanguage.googleapis.com",
     "oauth2.googleapis.com",
-    "*.aiplatform.googleapis.com",
+    "aiplatform.googleapis.com",
+    "*-aiplatform.googleapis.com",
     "bedrock-runtime.*.amazonaws.com",
 ];
 
@@ -128,6 +129,62 @@ fn validate_streamed_fetch_url(raw_url: &str) -> Result<(), String> {
         ));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn normalize_host_trims_and_lowercases() {
+        assert_eq!(normalize_host("API.OPENAI.COM."), "api.openai.com");
+    }
+
+    #[test]
+    fn detects_loopback_hosts() {
+        assert!(is_loopback_host("localhost"));
+        assert!(is_loopback_host("127.0.0.1"));
+        assert!(is_loopback_host("127.0.1.2"));
+        assert!(is_loopback_host("0.0.0.0"));
+        assert!(is_loopback_host("::1"));
+        assert!(!is_loopback_host("api.openai.com"));
+    }
+
+    #[test]
+    fn wildcard_matching_respects_subdomains() {
+        // Regional Vertex AI endpoint: {region}-aiplatform.googleapis.com
+        assert!(wildcard_match(
+            "us-central1-aiplatform.googleapis.com",
+            "*-aiplatform.googleapis.com"
+        ));
+        // AWS Bedrock: bedrock-runtime.{region}.amazonaws.com
+        assert!(wildcard_match(
+            "bedrock-runtime.us-east-1.amazonaws.com",
+            "bedrock-runtime.*.amazonaws.com"
+        ));
+        // Global endpoint should NOT match regional pattern
+        assert!(!wildcard_match(
+            "aiplatform.googleapis.com",
+            "*-aiplatform.googleapis.com"
+        ));
+        assert!(!wildcard_match("evil.com", "*.googleapis.com"));
+    }
+
+    #[test]
+    fn validates_allowed_https_hosts() {
+        assert!(validate_streamed_fetch_url("https://api.openai.com/v1/chat").is_ok());
+        assert!(
+            validate_streamed_fetch_url("https://us-central1-aiplatform.googleapis.com/v1").is_ok()
+        );
+    }
+
+    #[test]
+    fn blocks_insecure_or_disallowed_urls() {
+        assert!(validate_streamed_fetch_url("http://api.openai.com/v1/chat").is_err());
+        assert!(validate_streamed_fetch_url("https://localhost:1234/").is_err());
+        assert!(validate_streamed_fetch_url("https://evil.com/steal").is_err());
+        assert!(validate_streamed_fetch_url("notaurl").is_err());
+    }
 }
 
 #[tauri::command]
