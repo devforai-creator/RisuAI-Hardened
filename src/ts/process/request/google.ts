@@ -399,7 +399,7 @@ export async function requestGoogleCloudVertex(arg:RequestDataArgumentExtended):
 
     const apiKey = arg.key || db.google.accessToken
     const lastMessage = reformatedChat.length > 0 ? reformatedChat[reformatedChat.length - 1] : null
-    const messagesToCache: GeminiCacheMessage[] = reformatedChat.length > 0 ? reformatedChat.slice(0, -1) : []
+    const messagesToCache = (reformatedChat.length > 0 ? reformatedChat.slice(0, -1) : []) as GeminiCacheMessage[]
     let geminiCacheResult: GeminiCacheResult | null = null
 
     if (
@@ -441,7 +441,7 @@ export async function requestGoogleCloudVertex(arg:RequestDataArgumentExtended):
 
             console.debug('[Gemini Cache] Creation result:', geminiCacheResult)
 
-            if (!geminiCacheResult.success) {
+            if (geminiCacheResult.success === false) {
                 return {
                     type: 'fail',
                     result: `Gemini cache creation failed: ${geminiCacheResult.error}`

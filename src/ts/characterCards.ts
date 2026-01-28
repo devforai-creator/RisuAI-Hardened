@@ -18,7 +18,7 @@ import { exportModule, readModule, type RisuModule } from "./process/modules"
 import { readFile } from "@tauri-apps/plugin-fs"
 import { onOpenUrl } from '@tauri-apps/plugin-deep-link';
 import { AccountStorage } from "./storage/accountStorage"
-import { HARDENED_DISABLE_HUB } from "./security/hardening"
+import { HARDENED_DISABLE_HUB, HARDENED_LOCAL_ONLY } from "./security/hardening"
 
 
 const EXTERNAL_HUB_URL = 'https://sv.risuai.xyz';
