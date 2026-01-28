@@ -58,6 +58,15 @@ This document tracks security improvements made to RisuAI-Hardened since forking
   - Masks sensitive URL query parameters (`key`, `api_key`, `access_token`, etc.)
   - Prevents API key exposure in "request preview" feature and screenshots
 
+### Console Log Cleanup
+- **Removed sensitive console.log statements**
+  - `globalApi.svelte.ts`: Removed logging of request body (prompts, conversations)
+  - `google.ts`: Removed logging of LLM response results
+  - Prevents exposure via screenshots, screen sharing, browser extensions, crash reports
+- **Note**: ~328 other console.log statements remain (error messages, status info, debug logs)
+  - These do not log conversation content directly
+  - Full cleanup is tracked in "Known Remaining Work"
+
 ---
 
 ## Attack Surface Reduction
@@ -143,7 +152,8 @@ This document tracks security improvements made to RisuAI-Hardened since forking
 ## Known Remaining Work
 
 - [ ] Add JS-side tests for API key header migration
-- [ ] Consider allowlist synchronization strategy (JS ↔ Rust)
+- [ ] Consider allowlist synchronization strategy (JS ↔ Rust ↔ Tauri)
+- [ ] Audit remaining ~328 console.log statements for sensitive data
 
 ---
 

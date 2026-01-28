@@ -899,7 +899,6 @@ async function requestGoogle(url:string, body:any, headers:{[key:string]:string}
         }
     }
 
-    console.log(result)
     return {
         type: 'success',
         result: result

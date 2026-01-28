@@ -1438,7 +1438,6 @@ export async function fetchNative(url: string, arg: {
     chatId?: string
 }): Promise<Response> {
 
-    console.log(arg.body, 'body')
     arg.method = arg.method ?? 'POST'
 
     const db = getDatabase()
