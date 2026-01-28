@@ -21,6 +21,15 @@ See [SECURITY.md](SECURITY.md) for detailed changelog.
 - Fetch logging disabled to prevent credential exposure
 - Server-side URL validation with redirect bypass protection
 
+## Additional Features
+
+### Gemini Explicit Caching
+Cost optimization for Google Gemini API calls:
+- Caches system prompt + conversation history
+- ~90% cost reduction on cached tokens
+- Toggle in Settings > Google API section
+- Requires Flash (1024+ tokens) or Pro (4096+ tokens)
+
 ## Disabled Features
 
 | Feature | Reason |
