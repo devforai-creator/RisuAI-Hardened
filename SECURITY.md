@@ -29,6 +29,13 @@ This document tracks security improvements made to RisuAI-Hardened since forking
   - Redirect following disabled (prevents 302 bypass attacks)
   - Hardcoded allowlist (not controllable from JS)
 
+### Tauri HTTP Plugin Allowlist
+- **Restricted Tauri HTTP plugin to LLM endpoints only** (`migrated.json`)
+  - Removed wildcard `http(s)://*/*` permissions
+  - Only known LLM API hosts allowed (OpenAI, Anthropic, Google, etc.)
+  - Blocks localhost/loopback from Tauri HTTP plugin
+  - Defense in depth: XSS can no longer bypass JS allowlist via `invoke('plugin:http|fetch')`
+
 ### Raw Fetch Elimination
 - Replaced raw `fetch()` with `globalFetch()` in tokenizer
 - Network requests are expected to pass through `globalFetch` or the fetch guard; remaining native paths are listed in "Known Remaining Work"
@@ -44,6 +51,12 @@ This document tracks security improvements made to RisuAI-Hardened since forking
 
 ### Fetch Logging Disabled
 - Disabled fetch logging in hardened mode to prevent API key exposure in debug logs
+
+### Preview Payload Sanitization
+- **Added preview sanitizer to mask sensitive data** (`previewSanitizer.ts`)
+  - Removes `headers` and `header` fields from preview payloads
+  - Masks sensitive URL query parameters (`key`, `api_key`, `access_token`, etc.)
+  - Prevents API key exposure in "request preview" feature and screenshots
 
 ---
 
@@ -92,12 +105,20 @@ This document tracks security improvements made to RisuAI-Hardened since forking
 - `wildcard_match` pattern matching
 - `validate_streamed_fetch_url` full validation
 
+### Preview Sanitizer Tests (`previewSanitizer.test.ts`)
+- Header removal from preview payloads
+- Sensitive query parameter masking
+- Array payload handling
+- Invalid JSON handling
+
 ---
 
 ## Commit History
 
 | Date | Commit | Description |
 |------|--------|-------------|
+| 2026-01-28 | `ce91c2c5` | Restrict Tauri HTTP allowlist to LLM endpoints only |
+| 2026-01-28 | `f1da503e` | Sanitize preview prompt payload to prevent API key exposure |
 | 2026-01-28 | `c75e5716` | Disable service worker and share hash in hardened mode |
 | 2026-01-28 | `2f8e6c85` | Remove unused native_request Tauri command |
 | 2026-01-28 | `b509ffe6` | Fix Vertex AI allowlist pattern and add Rust tests |
