@@ -187,72 +187,6 @@ mod tests {
     }
 }
 
-#[tauri::command]
-async fn native_request(url: String, body: String, header: String, method: String) -> String {
-    let headers_json: Value = match serde_json::from_str(&header) {
-        Ok(h) => h,
-        Err(e) => return format!(r#"{{"success":false,"body":"{}"}}"#, e.to_string()),
-    };
-
-    let mut headers = HeaderMap::new();
-    let method = method.to_string();
-    if let Some(obj) = headers_json.as_object() {
-        for (key, value) in obj {
-            let header_name = match HeaderName::from_bytes(key.as_bytes()) {
-                Ok(name) => name,
-                Err(e) => return format!(r#"{{"success":false,"body":"{}"}}"#, e.to_string()),
-            };
-            let header_value = match HeaderValue::from_str(value.as_str().unwrap_or("")) {
-                Ok(value) => value,
-                Err(e) => return format!(r#"{{"success":false,"body":"{}"}}"#, e.to_string()),
-            };
-            headers.insert(header_name, header_value);
-        }
-    } else {
-        return format!(r#"{{"success":false,"body":"Invalid header JSON"}}"#);
-    }
-
-    let client = reqwest::Client::new();
-    let response: Result<reqwest::Response, reqwest::Error>;
-
-    if method == "POST" {
-        response = client
-            .post(&url)
-            .headers(headers)
-            .timeout(Duration::from_secs(120))
-            .body(body)
-            .send()
-            .await;
-    } else {
-        response = client
-            .get(&url)
-            .headers(headers)
-            .timeout(Duration::from_secs(120))
-            .send()
-            .await;
-    }
-
-    match response {
-        Ok(resp) => {
-            let headers = resp.headers();
-            let header_json = header_map_to_json(headers);
-            let status = resp.status().as_u16().to_string();
-            let bytes = match resp.bytes().await {
-                Ok(b) => b,
-                Err(e) => return format!(r#"{{"success":false,"body":"{}"}}"#, e.to_string()),
-            };
-            let encoded = general_purpose::STANDARD.encode(&bytes);
-
-            format!(
-                // r#"{{"success":true,"body":"{}","headers":{}}}"#,
-                r#"{{"success":true,"body":"{}","headers":{},"status":{}}}"#,
-                encoded, header_json, status
-            )
-        }
-        Err(e) => format!(r#"{{"success":false,"body":"{}","status":400}}"#, e.to_string()),
-    }
-}
-
 use oauth2::{
     EmptyExtraTokenFields, EndpointNotSet, EndpointSet, RevocationErrorResponseType,
     StandardErrorResponse, StandardRevocableToken, StandardTokenIntrospectionResponse,
@@ -761,7 +695,6 @@ fn main() {
         .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
             greet,
-            native_request,
             check_auth,
             check_requirements_local,
             install_python,

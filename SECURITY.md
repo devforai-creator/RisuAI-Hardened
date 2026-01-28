@@ -112,7 +112,6 @@ This document tracks security improvements made to RisuAI-Hardened since forking
 
 ## Known Remaining Work
 
-- [ ] Apply allowlist validation to `native_request` (same as `streamed_fetch`)
 - [ ] Add JS-side tests for API key header migration
 - [ ] Consider allowlist synchronization strategy (JS ↔ Rust)
 
