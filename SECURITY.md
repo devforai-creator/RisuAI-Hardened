@@ -200,6 +200,7 @@ Before scanning `url()` values, the full style string is normalized via `normali
 - [ ] Consider allowlist synchronization strategy (JS ↔ Rust ↔ Tauri)
 - [ ] Audit remaining ~328 console.log statements for sensitive data
 - [ ] customURL path still uses API key in URL query parameter (low priority - proxy/custom endpoint users only)
+- [ ] `<style>` tag URL filtering — `<style>` tags are hex-encoded before DOMPurify and decoded after, so the inline style URL allowlist does not apply. A malicious card could use `<style>.foo { background: url(https://evil.com/track.gif) }</style>` for exfiltration. Deferred due to high compatibility risk with existing character cards.
 
 ---
 
