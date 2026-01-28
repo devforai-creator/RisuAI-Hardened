@@ -503,6 +503,9 @@ export async function characterURLImport() {
         return
     }
     if(hash.startsWith('#share_character')){
+        if (HARDENED_LOCAL_ONLY) {
+            return
+        }
         const data = await fetch("/sw/share/character")
         if(data.status !== 200){
             return
@@ -514,6 +517,9 @@ export async function characterURLImport() {
         })
     }
     if(hash.startsWith('#share_module')){
+        if (HARDENED_LOCAL_ONLY) {
+            return
+        }
         const data = await fetch("/sw/share/module")
         if(data.status !== 200){
             return
@@ -529,6 +535,9 @@ export async function characterURLImport() {
         settingsOpen.set(true)
     }
     if(hash.startsWith('#share_preset')){
+        if (HARDENED_LOCAL_ONLY) {
+            return
+        }
         const data = await fetch("/sw/share/preset")
         if(data.status !== 200){
             return

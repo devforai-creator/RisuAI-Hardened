@@ -185,7 +185,10 @@ export async function loadData() {
                     return
                 }
                 LoadingStatusState.text = "Checking Service Worker..."
-                if (navigator.serviceWorker) {
+                if (HARDENED_LOCAL_ONLY) {
+                    setUsingSw(false)
+                }
+                else if (navigator.serviceWorker) {
                     setUsingSw(true)
                     await registerSw()
                 }
