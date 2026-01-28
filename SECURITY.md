@@ -154,6 +154,7 @@ This document tracks security improvements made to RisuAI-Hardened since forking
 - [ ] Add JS-side tests for API key header migration
 - [ ] Consider allowlist synchronization strategy (JS ↔ Rust ↔ Tauri)
 - [ ] Audit remaining ~328 console.log statements for sensitive data
+- [ ] customURL path still uses API key in URL query parameter (low priority - proxy/custom endpoint users only)
 
 ---
 
