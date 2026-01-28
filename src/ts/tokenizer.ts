@@ -205,23 +205,23 @@ async function tokenizeGoogleCloud(text:string) {
         headers["x-goog-api-key"] = db.google.accessToken
     }
 
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model.internalID}:countTokens`, {
+    const res = await globalFetch(`https://generativelanguage.googleapis.com/v1beta/models/${model.internalID}:countTokens`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({
+        body: {
             contents: [{
                 parts:[{
                     text: text
                 }]
             }]
-        }),
+        },
     })
 
-    if(res.status !== 200){
+    if(!res.ok || res.status !== 200){
         return await tokenizeWebTokenizers(text, 'gemma')
     }
 
-    const json = await res.json()
+    const json = res.data
     googleCloudTokenizedCache.set(text + model.internalID, json.totalTokens as number)
     const count = json.totalTokens as number
 
