@@ -57,6 +57,10 @@ const anyValidDefaultVarValue = fc
 
 beforeEach(() => {
   vi.resetAllMocks()
+  DBState.db.characters[0].defaultVariables = ''
+  DBState.db.templateDefaultVariables = ''
+  DBState.db.globalChatVariables = {}
+  DBState.db.characters[0].chats[0].scriptstate = {}
 })
 
 test('can get a character default variable', () => {
@@ -113,6 +117,7 @@ test('can get a global chat variable', () => {
         .filter((v) => v !== undefined)
         .map(JSON.stringify),
       (key, value) => {
+        DBState.db.globalChatVariables[key] = value
         DBState.db.globalChatVariables[`toggle_${key}`] = value
 
         expect(getGlobalChatVar(key)).toBe(value)
