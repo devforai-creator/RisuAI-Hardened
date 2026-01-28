@@ -10,6 +10,7 @@ import { applyParameters, type Parameter, type RequestDataArgumentExtended, type
 import { callTool, decodeToolCall, encodeToolCall } from "../mcp/mcp"
 import { alertError, alertNormal, alertWait, showHypaV2Alert } from "src/ts/alert";
 import { addFetchLog } from "src/ts/globalApi.svelte"
+import { createGeminiCache, DEFAULT_GEMINI_CACHE_TTL_SECONDS, resolveGeminiCacheDecision, type GeminiCacheResult } from "./googleCache"
 
 type GeminiFunctionCall = {
     id?: string;
@@ -394,7 +395,64 @@ export async function requestGoogleCloudVertex(arg:RequestDataArgumentExtended):
             'TEXT', 'IMAGE'
         ]
         arg.useStreaming = false
-    }    let headers:{[key:string]:string} = {}
+    }
+
+    const apiKey = arg.key || db.google.accessToken
+    const lastMessage = reformatedChat.length > 0 ? reformatedChat[reformatedChat.length - 1] : null
+    const messagesToCache = reformatedChat.length > 0 ? reformatedChat.slice(0, -1) : []
+    let geminiCacheResult: GeminiCacheResult | null = null
+
+    if (
+        db.geminiExplicitCacheEnabled &&
+        arg.modelInfo.format === LLMFormat.GoogleCloud &&
+        !arg.customURL &&
+        !arg.previewBody &&
+        lastMessage &&
+        (lastMessage.role === 'user' || lastMessage.role === 'model')
+    ) {
+        if (!apiKey) {
+            return {
+                type: 'fail',
+                result: 'Gemini cache is enabled but no Google API key is configured.'
+            }
+        }
+
+        const cacheDecision = resolveGeminiCacheDecision({
+            modelId: arg.modelInfo.internalID,
+            systemPrompt: systemPrompt,
+            messagesToCache: messagesToCache
+        })
+
+        if (cacheDecision.enabled) {
+            const ttlSeconds = Number.isFinite(db.geminiExplicitCacheTtl) && db.geminiExplicitCacheTtl > 0
+                ? Math.floor(db.geminiExplicitCacheTtl)
+                : DEFAULT_GEMINI_CACHE_TTL_SECONDS
+
+            geminiCacheResult = await createGeminiCache({
+                apiKey,
+                modelId: arg.modelInfo.internalID,
+                systemPrompt,
+                messagesToCache,
+                ttlSeconds,
+                chatId: arg.chatId
+            })
+
+            if (!geminiCacheResult.success) {
+                return {
+                    type: 'fail',
+                    result: `Gemini cache creation failed: ${geminiCacheResult.error}`
+                }
+            }
+        }
+    }
+
+    if (geminiCacheResult?.success && lastMessage) {
+        body.cachedContent = geminiCacheResult.cacheName
+        body.contents = [lastMessage]
+        delete body.systemInstruction
+    }
+
+    let headers:{[key:string]:string} = {}
 
     if(db.gptVisionQuality === 'high'){
         body.generation_config.mediaResolution = "MEDIA_RESOLUTION_MEDIUM"
@@ -530,7 +588,6 @@ export async function requestGoogleCloudVertex(arg:RequestDataArgumentExtended):
     }    
     
     let url = ''
-    let apiKey = arg.key || db.google.accessToken
     const useQueryKey = !!arg.customURL
     if (!useQueryKey && arg.modelInfo.format === LLMFormat.GoogleCloud && apiKey) {
         headers['x-goog-api-key'] = apiKey

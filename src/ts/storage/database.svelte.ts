@@ -403,6 +403,11 @@ export function setDatabase(data:Database){
     data.google ??= {}
     data.google.accessToken ??= ''
     data.google.projectId ??= ''
+    data.geminiExplicitCacheEnabled ??= false
+    data.geminiExplicitCacheTtl ??= 20
+    if (typeof data.geminiExplicitCacheTtl !== 'number') {
+        data.geminiExplicitCacheTtl = 20
+    }
     data.genTime ??= 1
     data.promptSettings ??= {
         assistantPrefill: '',
@@ -895,6 +900,8 @@ export interface Database{
         accessToken: string
         projectId: string
     }
+    geminiExplicitCacheEnabled: boolean
+    geminiExplicitCacheTtl: number
     mistralKey?:string
     chainOfThought?:boolean
     genTime:number
