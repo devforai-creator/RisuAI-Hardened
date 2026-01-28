@@ -62,6 +62,11 @@ This document tracks security improvements made to RisuAI-Hardened since forking
 | Drive sync | Cloud dependency |
 | Auto-updater | Supply chain risk |
 
+### Removed Tauri Commands
+| Command | Reason |
+|---------|--------|
+| `native_request` | Unused dead code (never called from JS, even in original RisuAI). Exposed attack surface for potential XSS/plugin exploitation via `invoke()`. |
+
 ### External Egress Hardening
 - Disabled hub/drive flows and related UI entry points when hardening flags are enabled
 - Hub references remain in code but are gated by hardening flags
@@ -91,6 +96,7 @@ This document tracks security improvements made to RisuAI-Hardened since forking
 
 | Date | Commit | Description |
 |------|--------|-------------|
+| 2026-01-28 | `2f8e6c85` | Remove unused native_request Tauri command |
 | 2026-01-28 | `b509ffe6` | Fix Vertex AI allowlist pattern and add Rust tests |
 | 2026-01-28 | `ba309883` | Add server-side allowlist validation to streamed_fetch |
 | 2026-01-28 | `36f2fcc2` | Replace raw fetch with globalFetch in tokenizer |
