@@ -22,6 +22,7 @@ import { registerCBS, type matcherArg, type RegisterCallback } from './cbs';
 import cssSelectorParser from 'postcss-selector-parser'
 import { HARDENED_LOCAL_ONLY } from './security/hardening';
 import { checkNetworkUrl, policyFromDatabase } from './security/networkPolicy';
+import { normalizeCssForUrlScan } from './security/cssEscapes';
 
 const markdownItOptions = {
     html: true,
@@ -92,12 +93,35 @@ DOMPurify.addHook("uponSanitizeElement", (node: HTMLElement, data) => {
 DOMPurify.addHook("uponSanitizeAttribute", (node, data) => {
     switch(data.attrName){
         case 'style':{
-            // Remove background-image URLs when hideAllImages is enabled
-            if((HARDENED_LOCAL_ONLY || DBState.db?.hideAllImages) && data.attrValue){
-                // Remove background-image property from inline styles
-                data.attrValue = data.attrValue.replace(/background(-image)?:\s*url\([^)]*\);?/gi, '')
-                // Also remove background property if it contains url()
-                data.attrValue = data.attrValue.replace(/background:\s*[^;]*url\([^)]*\)[^;]*;?/gi, '')
+            if(data.attrValue){
+                if(DBState.db?.hideAllImages){
+                    // User explicitly wants no images - strip all background-image URLs
+                    data.attrValue = data.attrValue.replace(/background(-image)?:\s*url\([^)]*\);?/gi, '')
+                    data.attrValue = data.attrValue.replace(/background:\s*[^;]*url\([^)]*\)[^;]*;?/gi, '')
+                } else if(HARDENED_LOCAL_ONLY){
+                    // Hardened mode: allowlist approach — neutralize any url() that
+                    // doesn't use a known-safe local protocol.
+                    // Allowed: data:, blob:, asset://localhost, tauri:,
+                    //          https://asset.localhost, and relative paths (no protocol).
+                    // Blocked: http(s)://, //, javascript:, file://, and all others.
+                    // Normalize before scanning so obfuscated function names are caught.
+                    const normalizedStyle = normalizeCssForUrlScan(data.attrValue)
+                    data.attrValue = normalizedStyle.replace(
+                        /(^|[^a-z0-9_-])url\s*\(\s*(['"]?)([\s\S]+?)\2\s*\)/gi,
+                        (match, prefix, _quote, url) => {
+                            const t = url.trim().toLowerCase()
+                            if (!t) return match
+                            if (t.startsWith('data:')) return match
+                            if (t.startsWith('blob:')) return match
+                            if (/^asset:\/\/localhost(:\d+)?(\/|$)/.test(t)) return match
+                            if (t.startsWith('tauri:')) return match
+                            if (/^https:\/\/asset\.localhost(:\d+)?(\/|$)/.test(t)) return match
+                            if (t.startsWith('//')) return `${prefix ?? ''}url("data:,")`
+                            if (/^[a-z][a-z0-9+.\-]*:/i.test(t)) return `${prefix ?? ''}url("data:,")`
+                            return match // relative path — app-local asset
+                        }
+                    )
+                }
             }
             break
         }
