@@ -32,6 +32,7 @@ import { getModelInfo, LLMFlags } from "../model/modellist";
 import { hypaMemoryV3 } from "./memory/hypav3";
 import { getModuleAssets, getModuleToggles } from "./modules";
 import { readImage } from "../globalApi.svelte";
+import { sanitizePreviewPayload } from "../security/previewSanitizer";
 
 export interface OpenAIChat{
     role: 'system'|'user'|'assistant'|'function'
@@ -1465,7 +1466,7 @@ export async function sendChat(chatProcessIndex = -1,arg:{
     }
 
     if(arg.previewPrompt && req.type === 'success'){
-        previewBody = req.result
+        previewBody = sanitizePreviewPayload(req.result)
         return true
     }
 
