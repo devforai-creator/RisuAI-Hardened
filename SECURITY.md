@@ -61,6 +61,8 @@ This document tracks security improvements made to RisuAI-Hardened since forking
 | Hub integration | Cloud dependency |
 | Drive sync | Cloud dependency |
 | Auto-updater | Supply chain risk |
+| Service Worker | Runs in separate context without fetch guard; disables image caching and web share |
+| Share hash routes | Web Share Target API disabled (depends on SW) |
 
 ### Removed Tauri Commands
 | Command | Reason |
@@ -96,6 +98,7 @@ This document tracks security improvements made to RisuAI-Hardened since forking
 
 | Date | Commit | Description |
 |------|--------|-------------|
+| 2026-01-28 | `c75e5716` | Disable service worker and share hash in hardened mode |
 | 2026-01-28 | `2f8e6c85` | Remove unused native_request Tauri command |
 | 2026-01-28 | `b509ffe6` | Fix Vertex AI allowlist pattern and add Rust tests |
 | 2026-01-28 | `ba309883` | Add server-side allowlist validation to streamed_fetch |
