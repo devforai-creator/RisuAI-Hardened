@@ -97,6 +97,40 @@ This document tracks security improvements made to RisuAI-Hardened since forking
 
 ---
 
+## CSS URL Filtering (Inline Styles)
+
+### Problem
+Character cards can embed arbitrary CSS via Lua `editDisplay` or inline `style` attributes. A malicious card could use `background-image: url(https://evil.com/track.gif)` to exfiltrate data or track users. The existing `hideAllImages` option strips all images, but that breaks legitimate local images.
+
+### Solution — Allowlist in DOMPurify Hook
+When `HARDENED_LOCAL_ONLY` is enabled, the `uponSanitizeAttribute` hook in `parser.svelte.ts` intercepts inline `style` attributes and applies an allowlist to every `url()` value:
+
+**Allowed protocols:**
+- `data:` — inline data URIs
+- `blob:` — in-memory blobs
+- `asset://localhost` — Tauri asset protocol
+- `tauri:` — Tauri internal protocol
+- `http(s)://asset.localhost` — Tauri 2 converted file sources (Windows uses `http://`, others use `https://`)
+- Relative paths (no protocol) — app-local assets
+
+**Blocked (replaced with `url("data:,")`):**
+- `http(s)://` to external hosts
+- `//` protocol-relative URLs
+- `javascript:`, `file://`, and all other absolute protocols
+
+### CSS Obfuscation Defenses
+Before scanning `url()` values, the full style string is normalized via `normalizeCssForUrlScan()` (`src/ts/security/cssEscapes.ts`):
+
+1. **CSS comment stripping** — Removes `/* */` outside of string literals so `u/**/rl(https://evil.com)` is caught
+2. **CSS escape decoding** — Decodes `\68\74\74\70\73` → `https`, `\6a\61\76\61script` → `javascript`, etc.
+3. **Line continuation removal** — Strips `\<newline>` sequences
+4. **Invalid code point handling** — Code points above U+10FFFF, surrogates, and null are replaced with U+FFFD (prevents crashes)
+
+### Note on `<style>` Tags
+`<style>` tags are hex-encoded before DOMPurify processing and decoded after, so they bypass DOMPurify entirely. Filtering `<style>` tag content is deferred due to high compatibility risk with existing character cards.
+
+---
+
 ## Testing
 
 ### Network Policy Tests (`networkPolicy.test.ts`)
@@ -120,12 +154,23 @@ This document tracks security improvements made to RisuAI-Hardened since forking
 - Array payload handling
 - Invalid JSON handling
 
+### CSS Escape / Comment Tests (`cssEscapes.test.ts`)
+- Hex escape decoding (single, multi-char, 6-digit, trailing whitespace)
+- Literal escapes and plain text passthrough
+- Bypass prevention (full URL hex encoding, protocol-relative, `javascript:`)
+- Invalid code points (>U+10FFFF, surrogates, null, overflow)
+- Line continuations (`\n`, `\r\n`, `\r`, `\f`)
+- CSS comment stripping (simple, multiple, multiline)
+- String-aware comment preservation (single/double quotes)
+
 ---
 
 ## Commit History
 
 | Date | Commit | Description |
 |------|--------|-------------|
+| 2026-01-29 | `284a15cc` | Allow http://asset.localhost in CSS URL allowlist (Tauri 2 Windows fix) |
+| 2026-01-29 | `a92bc754` | Harden inline style URL filtering with allowlist approach |
 | 2026-01-28 | `ce91c2c5` | Restrict Tauri HTTP allowlist to LLM endpoints only |
 | 2026-01-28 | `f1da503e` | Sanitize preview prompt payload to prevent API key exposure |
 | 2026-01-28 | `c75e5716` | Disable service worker and share hash in hardened mode |

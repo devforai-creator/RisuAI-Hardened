@@ -116,8 +116,8 @@ DOMPurify.addHook("uponSanitizeAttribute", (node, data) => {
                             if (/^asset:\/\/localhost(:\d+)?(\/|$)/.test(t)) return match
                             if (t.startsWith('tauri:')) return match
                             if (/^https?:\/\/asset\.localhost(:\d+)?(\/|$)/.test(t)) return match
-                            if (t.startsWith('//')) { console.debug('[CSS URL blocked]', url.trim()); return `${prefix ?? ''}url("data:,")` }
-                            if (/^[a-z][a-z0-9+.\-]*:/i.test(t)) { console.debug('[CSS URL blocked]', url.trim()); return `${prefix ?? ''}url("data:,")` }
+                            if (t.startsWith('//')) return `${prefix ?? ''}url("data:,")`
+                            if (/^[a-z][a-z0-9+.\-]*:/i.test(t)) return `${prefix ?? ''}url("data:,")`
                             return match // relative path — app-local asset
                         }
                     )
